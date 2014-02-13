@@ -1,5 +1,0 @@
-sed -e 's/$/\r/' inputfile > outputfile                # UNIX to DOS  (adding CRs)
-sed -e 's/\r$//' inputfile > outputfile                # DOS  to UNIX (removing CRs)
-perl -pe 's/\r\n|\n|\r/\r\n/g' inputfile > outputfile  # Convert to DOS
-perl -pe 's/\r\n|\n|\r/\n/g'   inputfile > outputfile  # Convert to UNIX
-perl -pe 's/\r\n|\n|\r/\r/g'   inputfile > outputfile  # Convert to old Mac
