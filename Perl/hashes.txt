@@ -1,0 +1,31 @@
+Hash Crash Course
+By Simon Cozens on November 2, 2006 12:00 AM
+When I teach about hashes, I do what most Perl tutors and tutorials do: I introduce the hash as a "dictionary": a mapping between one thing and another. The classic example, for instance, is to have a set of English words mapped to French words:
+
+    %french = (
+        apple  => "pomme",
+        pear   => "poivre",
+        orange => "Leon Brocard"
+    );
+Yet the more I look at my code--and more often, the more I look at how to tidy up other people's code--I realize that this is perhaps the least common use of a hash. Much more often, I use hashes in particular idioms which have very little in common with this concept of a mapping. It's interesting to consider the ways that programmers actually use hashes in Perl code.
+
+Counting
+
+Many of the uses of hashes are to "answer questions about lists." When you have an array or list of values and you need to ask about its properties, you will often find yourself using a hash. Start simply by counting the number of particular elements in a list. Here's the naïve approach:
+
+    my $count = 0;
+    for (@list) {
+        $count++ if $_ eq "apple";
+    }
+You can smarten this up with the use of the grep function:
+
+    $count = grep $_ eq "apple", @list;
+... but when you need the number of pears in the list, then you have to do the same again:
+
+    $count_apples = grep $_ eq "apple", @list;
+    $count_pears  = grep $_ eq "pear",  @list;
+Now there are two passes over the list, and the situation isn't going to get any prettier from here. What you want is basically a histogram of the data, and you can get that with a hash:
+
+    my %histogram;
+    $histogram{$_}++ for @list;
+This hash associates each individual item with its count, and it only traverses the list once.

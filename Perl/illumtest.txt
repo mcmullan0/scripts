@@ -1,0 +1,80 @@
+Line 1 contains sample names and info 1
+ATCGATCGATCGATCGATCGATCGATCG
++
+!@#$!@#$!@#$!@#$!@#$!@#$!@#$
+Line 1 contains sample names and info 2
+ATCGATCGATCGATCGATCGATCGATCG
++
+!@#$!@#$!@#$!@#$!@#$!@#$!@#$
+Line 1 contains sample names and info 3
+ATCGATCGATCGATCGATCGATCGATCG
++
+!@#$!@#$!@#$!@#$!@#$!@#$!@#$
+Line 1 contains sample names and info 4
+ATCGATCGATCGATCGATCGATCGATCG
++
+!@#$!@#$!@#$!@#$!@#$!@#$!@#$
+Line 1 contains sample names and info 5
+ATCGATCGATCGATCGATCGATCGATCG
++
+!@#$!@#$!@#$!@#$!@#$!@#$!@#$
+Line 1 contains sample names and info 6
+ATCGATCGATCGATCGATCGATCGATCG
++
+!@#$!@#$!@#$!@#$!@#$!@#$!@#$
+Line 1 contains sample names and info 7
+ATCGATCGATCGATCGATCGATCGATCG
++
+!@#$!@#$!@#$!@#$!@#$!@#$!@#$
+Line 1 contains sample names and info 8
+ATCGATCGATCGATCGATCGATCGATCG
++
+!@#$!@#$!@#$!@#$!@#$!@#$!@#$
+Line 1 contains sample names and info 9
+ATCGATCGATCGATCGATCGATCGATCG
++
+!@#$!@#$!@#$!@#$!@#$!@#$!@#$
+Line 1 contains sample names and info 10
+ATCGATCGATCGATCGATCGATCGATCG
++
+!@#$!@#$!@#$!@#$!@#$!@#$!@#$
+Line 1 contains sample names and info 11
+ATCGATCGATCGATCGATCGATCGATCG
++
+!@#$!@#$!@#$!@#$!@#$!@#$!@#$
+Line 1 contains sample names and info 12
+ATCGATCGATCGATCGATCGATCGATCG
++
+!@#$!@#$!@#$!@#$!@#$!@#$!@#$
+Line 1 contains sample names and info 13
+ATCGATCGATCGATCGATCGATCGATCG
++
+!@#$!@#$!@#$!@#$!@#$!@#$!@#$
+Line 1 contains sample names and info 14
+ATCGATCGATCGATCGATCGATCGATCG
++
+!@#$!@#$!@#$!@#$!@#$!@#$!@#$
+Line 1 contains sample names and info 15
+ATCGATCGATCGATCGATCGATCGATCG
++
+!@#$!@#$!@#$!@#$!@#$!@#$!@#$
+Line 1 contains sample names and info 16
+ATCGATCGATCGATCGATCGATCGATCG
++
+!@#$!@#$!@#$!@#$!@#$!@#$!@#$
+Line 1 contains sample names and info 17
+ATCGATCGATCGATCGATCGATCGATCG
++
+!@#$!@#$!@#$!@#$!@#$!@#$!@#$
+Line 1 contains sample names and info 18
+ATCGATCGATCGATCGATCGATCGATCG
++
+!@#$!@#$!@#$!@#$!@#$!@#$!@#$
+Line 1 contains sample names and info 19
+ATCGATCGATCGATCGATCGATCGATCG
++
+!@#$!@#$!@#$!@#$!@#$!@#$!@#$
+Line 1 contains sample names and info 20
+ATCGATCGATCGATCGATCGATCGATCG
++
+!@#$!@#$!@#$!@#$!@#$!@#$!@#$

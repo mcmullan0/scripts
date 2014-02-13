@@ -1,0 +1,17 @@
+Python lingo:
+Variables, are a stored numerical constant
+String, is a variable that contains text
+Operator, tells python what to do +, -, def...
+def, define your own fucntion:
+	def functionName(bits, of_information, passed from, the main program, to function):
+		within the function I now manipulate these bits of information.
+Turples lists and dictionarries
+	Tuples have (Mark, Angela)
+	lists have [Mark, Angela].  Add a value with lstName.append(), to add to the end,
+		delete with del cats[#]
+	dictionaries have {'Mark':07828978834, 'Angela':0784848484, }, add to the dictionary
+		with phonebook['Gingerbread Man'] = 1234567
+The difference between these is that Turples are fixed and cannot be edited. Lists can be
+edited but can only be referred to by number and with dictionaries you can use a name to refer
+to the stored variable.  Delete using del phonebook['Andrew Parson']
+

@@ -1,0 +1,52 @@
+div.CodeTitle	{ position: relative; float: center;
+                  top:0; width: 90%;
+                  background-color:Teal; color: White; }
+                  
+div.CodeBody    { position: relative; overflow: auto; float: center;
+                  top:1; width: 90%;
+                  background-color:silver; color: black;
+                  font-size: 125%; border: 0; }
+                
+div.ImageCaption { position: relative;
+                  top:1;
+                  background-color:Teal; color: White; }
+                  
+div.ImageBody   { position: relative;
+                  top:0;
+                  background-color:silver; color: black; }
+                  
+table.TableBody { position: relative; overflow: auto; float: center;
+                  top:1; width: 90%; 
+                  background-color:#EAEEFF; color: black;
+                  font-size: 110%; border-width: 0; }
+                  
+div.SidePanel   { position: absolute; float: left;
+                  top: 35; left: 5; width: 250;
+                  background-color: #EAEEFF;
+                  border-style: solid; border-color: black; border-width: 1px;
+                  font-size: 80%; font-family: Arial,sans-serif; }
+                  
+div.TextPanel   { position: absolute; top: 35; left: 270;
+                  background-color: #EAEEFF;
+                  border-style: solid; border-color: black; border-width: 1px;
+                  font-size: 80%; font-family: Arial,sans-serif; }
+
+div.RightPanel  { position: relative; 
+                  top: 8; left: 98%; width: 15;}
+
+div.Padding     { position: relative;
+                  width: 95%; }
+
+div.PaddingBig  { position: relative; align: center;
+                  background-color: #EAEEFF;
+                  width: 85%; }
+
+div.MenuSection { position: relative;
+                  width: 95%; top: 0; left: 0;
+                  background-color: #EAEEFF; color: black; }
+
+div.MenuItem    { position: relative; float: right;
+                  width: 95%; top: -4; font-size: 100%;
+                  background-color: #D9DDEE; color: black; }
+
+td.TableContent { background-color: silver; }

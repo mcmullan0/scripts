@@ -1,0 +1,19 @@
+#!/bin/sh
+#BSUB -B
+#BSUB -N
+#BSUB -q medium
+#BSUB -x
+#BSUB -o output-%J.log
+#BSUB -e error-%J.log
+#BSUB -J 05kgn_u-6_m-0_R.1_Ctrl3_[6-13]
+#BSUB -R "rusage[mem=8000]"
+. /etc/profile
+module add gcc/4.6.1 python/2.7.1
+python simu200-10GRACE.py
+#program and runfile
+
+cat simu200-10GRACE.py | sed "s/replacetext/05kgn_u-6_m-0_R.1_Ctrl3_${LSB_JOBINDEX}.csv/g" > simu200-10GRACE_$LSB_JOBINDEX.py
+python simu200-10GRACE_$LSB_JOBINDEX.py
+
+#cat runfile | sed "s/replacetext/jobname_${LSB_JOBINDEX}/g" > runfile_$LSB_JOBINDEX.runfileExtension
+#program runfile_$LSB_JOBINDEX.py
