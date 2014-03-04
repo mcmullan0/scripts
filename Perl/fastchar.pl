@@ -8,7 +8,7 @@ use warnings;
 use Getopt::Std;
 my %opts;
 # accept input file -i (argument)
-getopts('i:s:', \%opts);
+getopts('i:s', \%opts);
 unless ($opts{i})
 {
     print "\nCount all the characters in a fasta file";
@@ -64,3 +64,4 @@ unless($opts{s})
 {
     system("rm tempfile2.MM");
 }
+print "\n";
