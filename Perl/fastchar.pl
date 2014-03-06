@@ -8,12 +8,13 @@ use warnings;
 use Getopt::Std;
 my %opts;
 # accept input file -i (argument)
-getopts('i:s', \%opts);
+getopts('i:sc', \%opts);
 unless ($opts{i})
 {
     print "\nCount all the characters in a fasta file";
     print "\nDoes not count characters in the title line";
-    print "\nEnter infile -i\nEnter -s if you want to keep a file of all characters in the sequence line (tempfile2.MM -not just nucleotides)\n\n";
+    print "\nEnter infile -i\nEnter -s if you want to keep a file of all characters in the sequence line (tempfile2.MM -not just nucleotides)";
+    print "\nEnter -c to output a file of only upercase secuence\n\n";
     exit;
 }
 
@@ -30,15 +31,31 @@ print OUTFILE "";
 close OUTFILE;
 open (OUTFILE, ">>$temporyfile");
 
+my $ucfasta = ();
+if ($opts{c})
+{
+    $ucfasta = "$opts{i}UPPERCASE.MM";
+    open (UPOUTFILE, ">$ucfasta");
+}
+
 foreach my $line (<INFILE>)
 {
     if ($line =~ m/^>/)
     {
-        
+        if ($opts{c})
+        {
+            print UPOUTFILE "$line";
+        }
     }
     else
     {
         print OUTFILE "$line";
+        if ($opts{c})
+        {
+            my $LINE=uc$line;
+            print UPOUTFILE "$LINE";
+        }
+        
     }
 }
 
