@@ -15,12 +15,12 @@ getopts('i:x:', \%opts);
 if ($opts{i})
 {
     open(FAS, "<$opts{i}") or die("Could not open log file.");
-    my $temp = "temporaryfile01.txt";
-    open(FAS2, ">$temp");
-    my $clear = "";
-    print FAS2 "$clear";
-    close FAS2;
-    open(FAS2, ">>$temp");
+#    my $temp = "temporaryfile01.txt";
+#    open(FAS2, ">$temp");
+#    my $clear = "";
+#    print FAS2 "$clear";
+#    close FAS2;
+#    open(FAS2, ">>$temp");
     
     foreach my $line (<FAS>)
     {
@@ -32,15 +32,14 @@ if ($opts{i})
                 chop $line;
                 $len = length($line);
             }
-            print FAS2 "$line\n";
+            print "$line\n";
         }
         else
         {
-            print FAS2 "$line\n";
+            print "$line\n";
         }
     }
     close (FAS);
-    close (FAS2);    
 }
 else
 {
