@@ -103,8 +103,3 @@ if ($opts{q})
     print "$seq";
     print "\n";
 }
-
-else
-{
-    print "\nState fastA or fastQ (-a -q)\n\n";
-}
