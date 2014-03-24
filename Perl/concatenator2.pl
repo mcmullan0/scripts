@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-# Concatenates fasta sequences from mulitple files based on title line (>).
+# Concatenates (paste end to end) fasta sequences from mulitple files based on title line (>).
 # Will write to a new file -o 
 # Will add sequences (of the same name to the end of each line.
 # If you want sequences to remain in synteny they must be the same length within each fasta file.
@@ -23,7 +23,11 @@ if ($opts{d})
 }
 else
 {
-    print "\nEnter -d  directory (full path)\n\n";
+    print "\nConcatenates (paste end to end) fasta sequences from mulitple files based on identity of the title line (>).";
+    print "\nIf you want sequences to remain in synteny they must be the same length within each fasta file.";
+    print "\n\nFolder must only contain fasta files!";
+    print "\n\nEnter -d  directory (full path)";
+    print "\nEnter -o outfile name\n\n";
     exit;
 }
 if ($opts{o})
