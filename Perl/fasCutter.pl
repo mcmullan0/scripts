@@ -43,6 +43,7 @@ if ($opts{i})
 }
 else
 {
-    print "\nEnter input fasta file (-i)\nAlso, inlude desired name length (-x)\n";
+    print "\nTakes fasta filnames and cuts them to length x";
+    print "\n\nEnter input fasta file (-i)\nEnter desired name length (-x)\n";
 }
 print "\n";
