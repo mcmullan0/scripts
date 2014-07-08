@@ -68,7 +68,7 @@ foreach my $fastas (@fastas)
     open (INFILE, "<$opts{d}/$fastas");
     if ($opts{n})
     {
-        open (OUTFAS, ">$opts{d}/remove_amb/$fastas.n.fas");
+        open (OUTFAS, ">$directory/$fastas.n.fas");
     }
     foreach $line (<INFILE>)
     {
@@ -137,3 +137,27 @@ foreach my $fastas (@fastas)
         @info = ();
     }
 }
+
+# This used to be a seprate script (ambig_hetz.pl) but I added below as it simply removed some carrage returns and calculated an average
+# So here opts out from above becomes opts in
+
+# Open file
+my $infile = "$directory/$opts{o}";
+my $outfile = "$directory/$opts{o}.txt";
+
+open (OUTFILE, ">$outfile");
+print OUTFILE "Sequence,M,R,W,S,Y,K,V H D or B,n,Total,%Hetz\n";
+open(IN, "<$infile");
+foreach my $line (<IN>)
+{
+    if ($line =~ m/^>/)
+    {
+        chomp $line;
+        my @array = split(/,/, $line);
+        $array[10] = ($array[1]+$array[2]+$array[3]+$array[4]+$array[5]+$array[6])/($array[9]-$array[8])*100;
+        $array[11] = "\n";
+        #print OUTFILE "@array\n";
+       print OUTFILE join (",", @array);
+    }
+}
+unlink $infile
