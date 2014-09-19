@@ -37,6 +37,7 @@ unless ($opts{b})
   exit;
 }
 my $emailout = "$opts{e}";
+my $bsubemailout = "$opts{e}/";
 unless ($opts{p})
 {
   if ($opts{e})
@@ -87,25 +88,33 @@ for (my $i = 0; $i < $lineno; $i++)
 # bwa mem | samtools -view | -sort | -rmdup | -index
 #  if ($opts{p})
 #  {
-#    print "bsub -q $opts{q} $emailout-[$i].lsf \"bwa mem -t 8 $opts{f} $read1list[$i] $read2list[$i] | samtools view -Sb - | samtools sort -@ 4 -m 4G - $readolist[$i]-s; samtools rmdup $readolist[$i]-s.bam $readolist[$i]-sr.bam; samtools index $readolist[$i]-sr.bam; rm $readolist[$i]-s\"\n";
+#    print "bsub -q $opts{q} -o $emailout-[$i].lsf \"bwa mem -t 8 $opts{f} $read1list[$i] $read2list[$i] | samtools view -Sb - | samtools sort -@ 4 -m 4G - $readolist[$i]-s; samtools rmdup $readolist[$i]-s.bam $readolist[$i]-sr.bam; samtools index $readolist[$i]-sr.bam; rm $readolist[$i]-s\"\n";
 #  }
 # else
 #  {  
 #    system("source samtools-0.1.19; source bwa-0.7.7; bsub -q $opts{q} $emailout-[$i].lsf \"bwa mem -t 8 $opts{f} $read1list[$i] $read2list[$i] | samtools view -Sb - | samtools sort -@ 4 -m 4G - $readolist[$i]-s; samtools rmdup $readolist[$i]-s.bam $readolist[$i]-sr.bam; samtools index $readolist[$i]-sr.bam; rm $readolist[$i]-s\"");
 #  }
 #
-
 #
-# mem | samtools -view | -sort | -rmdup | -index | -mpileup | bcftools view for raw .vcf
+# mem | samtools -view | -sort | -rmdup | -index; then manual combined mpileup 
+#  if ($opts{p})
+#  {
+#    print "bsub -q $opts{q} -o $emailout-[$i].lsf \"bwa mem -t 8 $opts{f} $read1list[$i] $read2list[$i] | samtools view -Sb - | samtools sort - $readolist[$i]-s; samtools rmdup $readolist[$i]-s.bam $readolist[$i]-sr.bam; samtools index $readolist[$i]-sr.bam; rm $readolist[$i]-s.bam\"\n";
+#  }
+# else
+#  {
+#    system("source samtools-0.1.19; source bwa-0.7.7; bsub -q $opts{q} $emailout-[$i].lsf \"bwa mem -t 8 $opts{f} $read1list[$i] $read2list[$i] | samtools view -Sb - | samtools sort - $readolist[$i]-s; samtools rmdup $readolist[$i]-s.bam $readolist[$i]-sr.bam; samtools index $readolist[$i]-sr.bam; rm $readolist[$i]-s.bam\"");
+#  }
+#
+# mem | samtools -view | -sort | -rmdup | -index | -mpileup | bcftools view for raw .bcf
   if ($opts{p})
   {
-    print "bsub -q $opts{q} $emailout-[$i].lsf \"bwa mem -t 8 $opts{f} $read1list[$i] $read2list[$i] | samtools view -Sb - | samtools sort -@ 4 -m 4G - $readolist[$i]-s; samtools rmdup $readolist[$i]-s.bam $readolist[$i]-sr.bam; samtools index $readolist[$i]-sr.bam; rm $readolist[$i]-s; samtools mpileup -uDf $opts{f} $readolist[$i]-sr.bam | bcftools view -cg - > $readolist[$i]-sr.raw.vcf\"\n";
+    print "bsub -q $opts{q} -o $emailout-[$i].lsf \"bwa mem -t 8 $opts{f} $read1list[$i] $read2list[$i] | samtools view -Sb - | samtools sort - $readolist[$i]-s; samtools rmdup $readolist[$i]-s.bam $readolist[$i]-sr.bam; samtools index $readolist[$i]-sr.bam; rm $readolist[$i]-s.bam; samtools mpileup -uf $opts{f} $readolist[$i]-sr.bam | bcftools view -bvcg - > $readolist[$i]-sr.raw.bcf\"\n";
   }
  else
   {
-    system("source samtools-0.1.19; source bwa-0.7.7; bsub -q $opts{q} $emailout-[$i].lsf \"bwa mem -t 8 $opts{f} $read1list[$i] $read2list[$i] | samtools view -Sb - | samtools sort -@ 4 -m 4G - $readolist[$i]-s; samtools rmdup $readolist[$i]-s.bam $readolist[$i]-sr.bam; samtools index $readolist[$i]-sr.bam; rm $readolist[$i]-s; samtools mpileup -uDf $opts{f} $readolist[$i]-sr.bam | bcftools view -cg - > $readolist[$i]-sr.raw.vcf\"");
+    system("source samtools-0.1.19; source bwa-0.7.7; bsub -q $opts{q} $emailout-[$i].lsf \"bwa mem -t 8 $opts{f} $read1list[$i] $read2list[$i] | samtools view -Sb - | samtools sort - $readolist[$i]-s; samtools rmdup $readolist[$i]-s.bam $readolist[$i]-sr.bam; samtools index $readolist[$i]-sr.bam; rm $readolist[$i]-s.bam; samtools mpileup -ugf $opts{f} $readolist[$i]-sr.bam | bcftools view -bvcg - > $readolist[$i]-sr.raw.bcf\"");
   }
-#
 #
 #
 # bwa aln | bwa sampe | samtools view | samtools | rmdup | sort | index -you might want to change this to put the sort before rmdup
@@ -121,7 +130,7 @@ for (my $i = 0; $i < $lineno; $i++)
 # bwa mem | samtools -view | -sort | -rmdup | -index | -Pull out R1 reads from a .bam | -depth
 #  if ($opts{p})
 #  {
-#    print "bsub -q $opts{q} $emailout-[$i].lsf \"bwa mem -t 8 $opts{f} $read1list[$i] $read2list[$i] | samtools view -Sb - | samtools sort -@ 4 -m 4G - $readolist[$i]-s; samtools rmdup $readolist[$i]-s.bam $readolist[$i]-sr.bam; samtools index $readolist[$i]-sr.bam; rm $readolist[$i]-s; samtools view -b -h -f 0x0040 $readolist[$i]-sr.bam > $readolist[$i]-sr_r1.bam; samtools index $readolist[$i]-sr_r1.bam; samtools depth $readolist[$i]-sr_r1.bam > $readolist[$i]-sr_r1.depth; rm $readolist[$i]-s*.bam*\"\n";
+#    print "bsub -q $opts{q} -o $emailout-[$i].lsf \"bwa mem -t 8 $opts{f} $read1list[$i] $read2list[$i] | samtools view -Sb - | samtools sort -@ 4 -m 4G - $readolist[$i]-s; samtools rmdup $readolist[$i]-s.bam $readolist[$i]-sr.bam; samtools index $readolist[$i]-sr.bam; rm $readolist[$i]-s; samtools view -b -h -f 0x0040 $readolist[$i]-sr.bam > $readolist[$i]-sr_r1.bam; samtools index $readolist[$i]-sr_r1.bam; samtools depth $readolist[$i]-sr_r1.bam > $readolist[$i]-sr_r1.depth; rm $readolist[$i]-s*.bam*\"\n";
 #  }
 #  else
 #  {
@@ -147,5 +156,11 @@ for (my $i = 0; $i < $lineno; $i++)
 #  {
 #    system("source sickle-1.2; bsub -q $opts{q} $emailout-$readolist[$i] \"sickle pe -f $read1list[$i] -r $read2list[$i] -t sanger -o $readolist[$i]-R1-trim$opts{s}.fq -p $readolist[$i]-R2-trim$opts{s}.fq -s $readolist[$i]single.fq -q $opts{s} -l $opts{n} -x\"");
 #  }
+#if ($opts{p})
+#{
+#  print "\nbsub -w \'ended($bsubemailout*)\' -q $opts{q} \"echo $emailout jobs are finsihed; echo the number of \'fail\'s is; grep \'fail\' $emailout/* | wc -l; echo the number of \'exit\'s is; grep \'exit\' $emailout/* | wc -l\"";
+#}
+#else
+#{
+#  system("bsub -w \'ended($bsubemailout*)\' -q $opts{q} \"echo $emailout jobs are finsihed; echo the number of \'fail\'s is; grep \'fail\' $emailout/* | wc -l; echo the number of \'exit\'s is; grep \'exit\' $emailout/* | wc -l\"");
 }
-
