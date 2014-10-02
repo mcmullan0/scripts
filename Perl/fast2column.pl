@@ -12,7 +12,7 @@ unless ($opts{i})
 {
     print "\nA 'Transpose' for fasta files (fasta > column.csv)";
     print "\nConsider running fastchar.pl to remove character data?";
-    print "\nEnter infile -i (produces at tempMM files)\nEnter outfile -o\n\n";
+    print "\nEnter infile -i (produces at tempMM files)\nEnter outfile (prefix) -o\n\n";
     exit;
 }
 
@@ -42,12 +42,12 @@ foreach my $line (<INFILE>)
     }
 }
 close OUTFILE;
-my $finalfilename = "paste ";
+my $finalfilename = 'paste -d \'\0\' ';
 for (my $i = 1; $i < ($NoSeqs+1); $i++)
 {
     $finalfilename = "$finalfilename$opts{o}-$i.csv ";
 }
-$finalfilename = "$finalfilename \> $opts{o}.fas; rm testout-*";
+$finalfilename = "$finalfilename \> $opts{o}.fas; rm $opts{o}-*";
 system($finalfilename);
 
 

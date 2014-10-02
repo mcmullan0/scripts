@@ -21,7 +21,7 @@ if ($opts{i})
             chomp $line;
             if ($line =~ m/^>/)
             {
-                print "Population level polyM data for:\n$line\n";
+                print "# Population level polyM data for:\n#$line\n";
             }
             else
             {
@@ -54,5 +54,3 @@ else
     exit;
 }
 
-# Headers for next stage
-my $headers = "MSNP,MSNPNo,mSNP,mSNPNo,Hetz,hNo,Total";    #Major SNP, Major SNP number,minor SNP,minor SNP number,Hetz SNP, Hetz SNP number, total
