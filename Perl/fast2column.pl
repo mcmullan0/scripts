@@ -47,7 +47,7 @@ for (my $i = 1; $i < ($NoSeqs+1); $i++)
 {
     $finalfilename = "$finalfilename$opts{o}-$i.csv ";
 }
-$finalfilename = "$finalfilename \> $opts{o}.fas; rm $opts{o}-*";
+$finalfilename = "$finalfilename \> $opts{o}.csv; rm $opts{o}-*";
 system($finalfilename);
 
 
