@@ -59,7 +59,7 @@ else
 {
     print "\nWill generate a column of data for a sliding window accepts a column of data";
     print "\nRun after sliding-0.3.pl";
-    print "\nEnter infile -i (produces at tempMM files)\nEnter the window size -w\nWould you like a column of positions?";
+    print "\nEnter infile -i (produces at tempMM files)\nEnter the window size -w\nWould you like a column of positions? Enter -p";
     print "\n\npull out the relevent column from a csv using grep\nfor column 10 excluding hash lines use:";
     print "\ngrep -v '#' temp.window-summary | awk 'BEGIN { FS="," }; {print $10}' | ./window-0.1.pl -i - -w 5000 > temp.window-5000";
     print "\n\nConsider sending to 'Rscript windowplotter.R' for a quick plot = Rplots.pdf\n\n";
