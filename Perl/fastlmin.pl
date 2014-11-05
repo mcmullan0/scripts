@@ -19,7 +19,7 @@ if ($opts{i})
 }
 else
 {
-    print "strips all sequences shorter than -l from a fasta file";
+    print "\nstrips all sequences shorter than -l from a fasta file";
     print "\nEnter -i filename\nState minimum length of sequence (includes last whtspc)\n\n";
     exit;
 }

@@ -8,7 +8,7 @@ use warnings;
 # Designed to generate contig sets from multiple genome alignments to the same reference.
 #
 # Folder must only contain fasta files!
-# Use fastaCutter.pl to trim sequence names in situations where names are different by a sting after the name
+# Use fastaCutter.pl to trim sequence names in situations where names are different by a string after the name
 #  e.g. >Fasta_spA_Prot1 and Fasta_spA_Prot2 could be reduced to Fasta_spA in both files so that they can be
 #  concatenated.
 #
