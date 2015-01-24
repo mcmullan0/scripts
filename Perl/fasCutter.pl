@@ -11,7 +11,7 @@ use warnings;
 use Getopt::Std;
 my %opts;
 # accept input directory -d (argument)
-getopts('i:x:', \%opts);
+getopts('i:x:c:r', \%opts);
 if ($opts{i})
 {
     open(FAS, "<$opts{i}") or die("Could not open log file.");
@@ -24,15 +24,33 @@ if ($opts{i})
     
     foreach my $line (<FAS>)
     {
+        chomp $line;
         if ($line =~ /^>/)
         {
-            my $len = length($line);
-            while ($len > $opts{x})
+            if ($opts{x})
             {
-                chop $line;
-                $len = length($line);
+                my $len = length($line);
+                while ($len > $opts{x})
+                {
+                    chop $line;
+                    $len = length($line);
+                }
+                print "$line\n";
             }
-            print "$line\n";
+            else
+            {
+                my $lastchar = substr $line,-1;
+                while ($lastchar ne $opts{c})
+                {
+                    chop $line;
+                    $lastchar = substr $line,-1;
+                }
+                if ($opts{r})
+                {
+                    chop $line;
+                }
+                print "$line\n";
+            }
         }
         else
         {
@@ -43,7 +61,7 @@ if ($opts{i})
 }
 else
 {
-    print "\nTakes fasta filnames and cuts them to length x";
+    print "\nTakes fasta filnames and cuts them to length x\nOr, now cuts to a specific character -c (optional -r to remove the character";
     print "\n\nEnter input fasta file (-i)\nEnter desired name length (-x)\n";
 }
 print "\n";
