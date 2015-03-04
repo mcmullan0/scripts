@@ -12,7 +12,7 @@ use warnings;
 
 use Getopt::Std;
 my %opts;
-getopts('i:d:p:a:o:eu', \%opts);
+getopts('i:d:p:a:eu', \%opts);
 
 # Check input directory and make a list of CNVnator files (remove hidden files)
 unless ($opts{d} && $opts{p})
@@ -25,13 +25,6 @@ unless ($opts{d} && $opts{p})
     print "\n-e or -u to curate dEletions or dUplications (this is done seperately so choose one OR the other)\n\n";
     print "\nOpens and removes a temporary file call tempcnvmerg.MM\n\n";
     exit;
-}
-if ($opts{o})
-{
-    # blank the output file
-    open(OUT, ">$opts{o}");
-    print OUT "";
-    close (OUT);
 }
 
 # Set $deldup to capture requred CNV
@@ -66,7 +59,7 @@ foreach my $files (@files)
 {
     push(@cnvfiles, $files) unless("$files" =~ /^\./);
 }
-print "CNVmerge.pl\nCNV files = @cnvfiles\n";
+print "CNVmerge.pl\nDirectory = $opts{d}\nCNV files = @cnvfiles\n";
 print "\n\nSampling \"$deldup\" sites at alpha = $opts{a} (column $opts{p})\n\n";
 
 # For each CNV file:
