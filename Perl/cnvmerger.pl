@@ -17,13 +17,13 @@ getopts('i:d:p:a:o:eu', \%opts);
 # Check input directory and make a list of CNVnator files (remove hidden files)
 unless ($opts{d} && $opts{p})
 {
-    print "\nMerges CNV information from multiple CNVnator runs";
+    print "\nMerges CNV information from multiple CNVnator runs\n";
     print "\n-i Provide an index of the start and dtop positions of each scaffold (scaff-name[tab]start[tab]stop)  [I might not use this]";
     print "\n-d Provide a direcory that contains all CNVnator output files";
     print "\n-p Provide a column number (5-8) for the p-values you want to use";
     print "\n-a Privide an alpha value for p-value acceptance criteria (default = 0.05)";
     print "\n-e or -u to curate dEletions or dUplications (this is done seperately so choose one OR the other)\n\n";
-    print "\nOpens and removes a temporary file call tempcnvmerg.MM";
+    print "\nOpens and removes a temporary file call tempcnvmerg.MM\n\n";
     exit;
 }
 if ($opts{o})
