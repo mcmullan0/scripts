@@ -14,6 +14,11 @@ use Getopt::Std;
 my %opts;
 getopts('i:d:p:a:eu', \%opts);
 
+# Get random number for file suffix
+my $max = 999999;
+my $rand = int(rand($max));
+
+
 # Check input directory and make a list of CNVnator files (remove hidden files)
 unless ($opts{d} && $opts{p})
 {
@@ -23,7 +28,7 @@ unless ($opts{d} && $opts{p})
     print "\n-p Provide a column number (5-8) for the p-values you want to use";
     print "\n-a Privide an alpha value for p-value acceptance criteria (default = 0.05)";
     print "\n-e or -u to curate dEletions or dUplications (this is done seperately so choose one OR the other)\n\n";
-    print "\nOpens and removes a temporary file call tempcnvmerg.MM\n\n";
+    print "\nOpens and removes a temporary file call tempcnvmerg-$rand.MM\n\n";
     exit;
 }
 
@@ -105,8 +110,7 @@ foreach my $cnvfiles (@cnvfiles)
     }
 }
 
-#print "Scaffold\tCNV\n";
-my $tempout = "tempcnvmerg.MM";
+my $tempout = "tempcnvmerg-$rand.MM";
 open (OUTFILE, ">$tempout");
 print OUTFILE "";
 close OUTFILE;
@@ -116,8 +120,8 @@ foreach (keys %eventhash)
 {
     print OUTFILE "$_\t$eventhash{$_}\n";
 }
-system("sort -t\"_\" -k2,2n -k3,3n tempcnvmerg.MM > tempcnvmerg.MM2");
+system("sort -t\"_\" -k2,2n -k3,3n tempcnvmerg-$rand.MM > tempcnvmerg-$rand.MM2");
 print "Scaffold\tCNV\n";
-system("cat tempcnvmerg.MM2; rm tempcnvmerg.MM tempcnvmerg.MM2");
+system("cat tempcnvmerg-$rand.MM2; rm tempcnvmerg-$rand.MM tempcnvmerg-$rand.MM2");
 
 
