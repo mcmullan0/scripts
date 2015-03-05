@@ -15,7 +15,7 @@ my %opts;
 getopts('i:d:p:a:eu', \%opts);
 
 # Get random number for file suffix
-my $max = 999999;
+my $max = 999999999;
 my $rand = int(rand($max));
 
 
