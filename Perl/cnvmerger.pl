@@ -64,7 +64,7 @@ foreach my $files (@files)
 {
     push(@cnvfiles, $files) unless("$files" =~ /^\./);
 }
-print "CNVmerge.pl\nDirectory = $opts{d}\nCNV files = @cnvfiles\n";
+print "CNVmerge.pl\nrandom number = $rand\nDirectory = $opts{d}\nCNV files = @cnvfiles\n";
 print "\n\nSampling \"$deldup\" sites at alpha = $opts{a} (column $opts{p})\n\n";
 
 # For each CNV file:
