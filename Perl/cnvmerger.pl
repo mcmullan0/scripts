@@ -12,7 +12,7 @@ use warnings;
 
 use Getopt::Std;
 my %opts;
-getopts('i:d:p:a:eu', \%opts);
+getopts('d:p:a:eu', \%opts);
 
 # Get random number for file suffix
 my $max = 999999999;
@@ -23,7 +23,7 @@ my $rand = int(rand($max));
 unless ($opts{d} && $opts{p})
 {
     print "\nMerges CNV information from multiple CNVnator runs\n";
-    print "\n-i Provide an index of the start and dtop positions of each scaffold (scaff-name[tab]start[tab]stop)  [I might not use this]";
+#    print "\n-i Provide an index of the start and stop positions of each scaffold (scaff-name[tab]start[tab]stop)  [I might not use this]";
     print "\n-d Provide a direcory that contains all CNVnator output files";
     print "\n-p Provide a column number (5-8) for the p-values you want to use";
     print "\n-a Privide an alpha value for p-value acceptance criteria (default = 0.05)";
@@ -65,7 +65,8 @@ foreach my $files (@files)
     push(@cnvfiles, $files) unless("$files" =~ /^\./);
 }
 print "CNVmerge.pl\nrandom number = $rand\nDirectory = $opts{d}\nCNV files = @cnvfiles\n";
-print "\n\nSampling \"$deldup\" sites at alpha = $opts{a} (column $opts{p})\n\n";
+my $addone = $opts{p}+1;
+print "\n\nSampling \"$deldup\" sites at alpha = $opts{a} (column $addone)\n\n";
 
 # For each CNV file:
 #   open for each line
@@ -79,12 +80,12 @@ print "\n\nSampling \"$deldup\" sites at alpha = $opts{a} (column $opts{p})\n\n"
 #           Add or cound in dictionary
 #   Delete array or Name array IND-X (keep dictionary)
 
-my $cnvcounter = 0;
 my %eventhash;
 foreach my $cnvfiles (@cnvfiles)
 {
+    my $cnvcounter = 0;
+    my $cnvbp = 0;
     my $filepath = "$opts{d}/$cnvfiles";
-    $cnvcounter = $cnvcounter+1;
     open(CNVFILE, "<$filepath") or die "cannot open < $filepath: $!";
     foreach my $line (<CNVFILE>)
     {
@@ -93,6 +94,7 @@ foreach my $cnvfiles (@cnvfiles)
         {
             if ($split[$opts{p}] <= $opts{a})   # If it is significant seperate out coords from scaff and 
             {
+                $cnvcounter = $cnvcounter + 1;
                 my @eventarray;
                 my $coordinates=$split[1];      
                 my @scaff = split /:/, $coordinates;
@@ -100,6 +102,7 @@ foreach my $cnvfiles (@cnvfiles)
                 for (my $i=$eventbp[0]; $i<=$eventbp[1]; $i++)
                 {
                     push(@eventarray, "$scaff[0]_$i");
+                    $cnvbp++;
                 }
                 foreach (@eventarray)
                 {
@@ -108,6 +111,7 @@ foreach my $cnvfiles (@cnvfiles)
             }
         }
     }
+    print "$cnvfiles\t$cnvcounter\t$cnvbp\n";
 }
 
 my $tempout = "tempcnvmerg-$rand.MM";
