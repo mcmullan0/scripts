@@ -12,7 +12,7 @@ use warnings;
 
 use Getopt::Std;
 my %opts;
-getopts('d:p:a:eu', \%opts);
+getopts('d:p:a:teu', \%opts);
 
 # Get random number for file suffix
 my $max = 999999999;
@@ -28,6 +28,7 @@ unless ($opts{d} && $opts{p})
     print "\n-p Provide a column number (5-8) for the p-values you want to use";
     print "\n-a Privide an alpha value for p-value acceptance criteria (default = 0.05)";
     print "\n-e or -u to curate dEletions or dUplications (this is done seperately so choose one OR the other)\n\n";
+    print "\n-t If you want save a pairwise distance table of cnv differences between individuals\n\n";
     print "\nOpens and removes a temporary file call tempcnvmerg-$rand.MM\n\n";
     exit;
 }
@@ -47,13 +48,16 @@ else
     print "\nSpecify whether or not you want the script to count deletions (-e) or duplications (-u)\n\n";
     exit;
 }
+
 # Set alpha value
 unless ($opts{a})
 {
     $opts{a}=0.05;
 }
-# Correct for counting zero in array
+
+# Correct for pvalue column for counting zero in array
 $opts{p}=$opts{p}-1;
+my $addone = $opts{p}+1;    # Used in print below
 
 opendir (DIR, $opts{d}) or die "\nCannot open directory\n$!\n\n";
 my @files = readdir DIR;
@@ -65,9 +69,9 @@ foreach my $files (@files)
     push(@cnvfiles, $files) unless("$files" =~ /^\./);
 }
 print "CNVmerge.pl\nrandom number = $rand\nDirectory = $opts{d}\nCNV files = @cnvfiles\n";
-my $addone = $opts{p}+1;
 print "\n\nSampling \"$deldup\" sites at alpha = $opts{a} (column $addone)\n\n";
 
+#Script logic
 # For each CNV file:
 #   open for each line
 #       ask is it a deletion or duplication? (filter)
@@ -79,8 +83,19 @@ print "\n\nSampling \"$deldup\" sites at alpha = $opts{a} (column $addone)\n\n";
 #       foreach element in array
 #           Add or cound in dictionary
 #   Delete array or Name array IND-X (keep dictionary)
+#Add pairwise distance funtionality 
 
 my %eventhash;
+my $noind = scalar @cnvfiles;
+my @allcnv;
+
+my $pairWout;
+if ($opts{t})
+{
+    $pairWout = "temp_pairwise-$rand.MM";
+    open (PAIROUTFILE, ">>$pairWout");
+}
+
 foreach my $cnvfiles (@cnvfiles)
 {
     my $cnvcounter = 0;
@@ -108,6 +123,11 @@ foreach my $cnvfiles (@cnvfiles)
                 {
                     $eventhash{$_}++;
                 }
+                if ($opts{t})   # If parwise distance table is required generate an array for each ind to save all the cnv sites
+                {
+                    my $scal = join(",", @eventarray);
+                    print PAIROUTFILE "$scal\n";
+                }
             }
         }
     }
@@ -128,4 +148,12 @@ system("sort -t\"_\" -k2,2n -k3,3n tempcnvmerg-$rand.MM > tempcnvmerg-$rand.MM2"
 print "Scaffold\tCNV\n";
 system("cat tempcnvmerg-$rand.MM2; rm tempcnvmerg-$rand.MM tempcnvmerg-$rand.MM2");
 
+# Really do the pairwise stuff that was collected in PAIROUTFILE
+if ($opts{t})
+{
+    close PAIROUTFILE;
+    open (PAIROUTFILE, "<$pairWout") or die "cannot open < $pairWout: $!";
+    close PAIROUTFILE;
+}
 
+# At this stage I should have generated a large file with a line for each indivdiual with each cnv base seperated by a comma.
