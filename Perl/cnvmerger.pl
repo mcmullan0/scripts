@@ -25,7 +25,7 @@ unless ($opts{d} && $opts{p})
     print "\nMerges CNV information from multiple CNVnator runs\n";
 #    print "\n-i Provide an index of the start and stop positions of each scaffold (scaff-name[tab]start[tab]stop)  [I might not use this]";
     print "\n-d Provide a direcory that contains all CNVnator output files";
-    print "\n-p Provide a column number (5-8) for the p-values you want to use";
+    print "\n-p Provide a column number (5-8) for the p-values you want to use (default = 5)";
     print "\n-a Privide an alpha value for p-value acceptance criteria (default = 0.05)";
     print "\n-e or -u to curate dEletions or dUplications (this is done seperately so choose one OR the other)\n\n";
     print "\n-t If you want save a pairwise distance table of cnv differences between individuals\n\n";
@@ -49,6 +49,11 @@ else
     exit;
 }
 
+# Set p-value column
+unless ($opts{p})
+{
+    $opts{p}=5;
+}
 # Set alpha value
 unless ($opts{a})
 {
@@ -149,11 +154,55 @@ print "Scaffold\tCNV\n";
 system("cat tempcnvmerg-$rand.MM2; rm tempcnvmerg-$rand.MM tempcnvmerg-$rand.MM2");
 
 # Really do the pairwise stuff that was collected in PAIROUTFILE
+my @cnvsites;   # Stores the number of cnv sites for each focal ind for addtion to a matrix later
 if ($opts{t})
 {
     close PAIROUTFILE;
-    open (PAIROUTFILE, "<$pairWout") or die "cannot open < $pairWout: $!";
-    close PAIROUTFILE;
+    open (PAIROUTFILE1, "<$pairWout") or die "cannot open < $pairWout: $!";
+    open (PAIROUTFILE2, "<$pairWout");
+    my %paireventhash;
+    foreach my $fline (<PAIROUTFILE1>)
+    {
+        my @sharedsites;
+        my @focal = split /,/, $fline;                  # Generate a focal array
+        my @query;
+        push @cnvsites, scalar $fline;                  ##### Total event No. bp (Focal) #####
+        foreach my $qline (<PAIROUTFILE2>)              # Compare to each line of the query
+        {   
+            @query = split /,/, $qline;                 # Generate a query array
+            push @query, @focal;                        # Add the focal array to it to be counted in the hash
+            my $sharedsitescount = 0;                   # Count the sites that are shred for each query comparison and add each to
+            my $sharedsitespropr = 0;
+            foreach (@query)                            # Add each element to the hash and/or count it
+            {
+                $paireventhash{$_}++;
+            }
+            while ((my $key, my $value) = each (%paireventhash))
+            {
+                if ($value == 2)
+                {
+                    $sharedsitescount++;
+                }
+                push (@sharedsites, $sharedsitescount); ##### No. Shared sites (Focal / Query) #####
+            }
+            my $f = scalar $fline;
+            my $q = scalar $qline;
+            if ($f >= $q)                               ##### No. Shared sites (Focal / Query) #####
+            {
+                $sharedsitespropr = $sharedsitescount / $f
+            }
+            else
+            {
+                $sharedsitespropr = $sharedsitescount / $q
+            }
+            # The Total event No per focal can be printed at the end.
+            # Here, save both No. Shared sites (Focal / Query) and No. Shared sites (Focal / Query) to an array
+            # to print at the end of this focal indivdial
+        }
+    }
+    close PAIROUTFILE1;
+    close PAIROUTFILE2;
+    system("rm temp_pairwise-$rand.MM");
 }
 
 # At this stage I should have generated a large file with a line for each indivdiual with each cnv base seperated by a comma.
