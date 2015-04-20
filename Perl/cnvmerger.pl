@@ -20,7 +20,7 @@ my $rand = int(rand($max));
 
 
 # Check input directory and make a list of CNVnator files (remove hidden files)
-unless ($opts{d} && $opts{p})
+unless ($opts{d})
 {
     print "\nMerges CNV information from multiple CNVnator runs\n";
 #    print "\n-i Provide an index of the start and stop positions of each scaffold (scaff-name[tab]start[tab]stop)  [I might not use this]";
