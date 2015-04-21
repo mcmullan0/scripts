@@ -160,7 +160,12 @@ if ($opts{t})
 #    Proportion of event sites shared for ind with most event sites matrix (all against all)
     open (TOTOUTFILE, ">>tot_$pairWout");
     open (NUMOUTFILE, ">>num_$pairWout");
-    open (PRPOUTFILE, ">>prp_$pairWout"); 
+    open (PRPOUTFILE, ">>prp_$pairWout");
+    # Print header in temporary output
+    my $temp2 = join(",", @cnvfiles);
+    print TOTOUTFILE "$temp2\n";
+    print NUMOUTFILE "$temp2\n";
+    print PRPOUTFILE "$temp2\n";
     close PAIROUTFILE;
     open (PAIROUTFILE1, "<$pairWout");
     my %paireventhash;
