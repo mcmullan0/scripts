@@ -152,24 +152,37 @@ system("cat tempcnvmerg-$rand.MM2; rm tempcnvmerg-$rand.MM tempcnvmerg-$rand.MM2
 # Compare each line of the output file to each line of the same file.
 # This file contains a line for each ind of the names of every position with a cnv in the genome
 my @cnvsites;   # Stores the number of cnv sites for each focal ind for addtion to a matrix later
+my @sharedsites;
+my @proporsites;
 if ($opts{t})
 {
+# Use 3 temporaty files:
+#    No. of event sites one comma seperated line
+#    No. of shared event sites matrix (all against all)
+#    Proportion of event sites shared for ind with most event sites matrix (all against all)
+    open (TOTOUTFILE, ">>tot_$pairWout");
+    open (NUMOUTFILE, ">>num_$pairWout");
+    open (PRPOUTFILE, ">>prp_$pairWout"); 
     close PAIROUTFILE;
-    open (PAIROUTFILE1, "<$pairWout") or die "cannot open < $pairWout: $!";
+    open (PAIROUTFILE1, "<$pairWout");
     my %paireventhash;
+#    my @sharedsites;
+#    my @proporsites;
     foreach my $fline (<PAIROUTFILE1>)
     {
         open (PAIROUTFILE2, "<$pairWout");
-        my @sharedsites;
+#        my @sharedsites;
+#        my @proporsites;
         my @focal = split /,/, $fline;                  # Generate a focal array
         my @query;					# For the file2 array (when we open it)
-        push @cnvsites, scalar $fline;                  ##### Total event No. bp (Focal) #####
+        my $sites = scalar @focal;
+        push @cnvsites, $sites;                         ##### Total event No. bp (Focal) #####
         foreach my $qline (<PAIROUTFILE2>)              # Compare to each line of the query
         {   
             @query = split /,/, $qline;                 # Generate a query array
             push @query, @focal;                        # Add the focal array to it to be counted in the hash
             my $sharedsitescount = 0;                   # Count the sites that are shred for each query comparison and add each to
-            my $sharedsitespropr = 0;			# Generate the proportion of shared sites given the total No. cnv sites
+            my $sharedsitespropr;			# Generate the proportion of shared sites given the total No. cnv sites
             foreach (@query)                            # Add each element to the hash and/or count it
             {
                 $paireventhash{$_}++;
@@ -180,11 +193,24 @@ if ($opts{t})
                 {
                     $sharedsitescount++;
                 }
-                push (@sharedsites, $sharedsitescount); ##### No. Shared sites (Focal / Query) #####
+#                push (@sharedsites, $sharedsitescount); ##### No. Shared sites (Focal / Query) #####
+#                my $f = scalar @focal;
+#                my $q = scalar @query;
+#                if ($f >= $q)                           # Get proportion of event sites for ind with most event sites
+#                {
+#                    $sharedsitespropr = $sharedsitescount / $f
+#                }
+#                else
+#                {
+#                    $sharedsitespropr = $sharedsitescount / $q
+#                }
+#                push (@proporsites, $sharedsitespropr); ##### Proportion of shared for all ind compared to ind focal ####
             }
+###
+            push (@sharedsites, $sharedsitescount); ##### No. Shared sites (Focal / Query) #####
             my $f = scalar @focal;
             my $q = scalar @query;
-            if ($f >= $q)                               ##### No. Shared sites (Focal / Query) #####
+            if ($f >= $q)                           # Get proportion of event sites for ind with most event sites
             {
                 $sharedsitespropr = $sharedsitescount / $f
             }
@@ -192,14 +218,31 @@ if ($opts{t})
             {
                 $sharedsitespropr = $sharedsitescount / $q
             }
+            push (@proporsites, $sharedsitespropr); ##### Proportion of shared for all ind compared to ind focal ####
+###
             # The Total event No per focal can be printed at the end.
             # Here, save both No. Shared sites (Focal / Query) and No. Shared sites (Focal / Query) to an array
             # to print at the end of this focal indivdial
         }
         close PAIROUTFILE2;
+        my $temp = join(",", @sharedsites);
+        @sharedsites = ();
+        print NUMOUTFILE "$temp\n";
+        $temp = join(",", @proporsites);
+        @proporsites = ();
+        print PRPOUTFILE "$temp\n";
     }
+    my $temp = join(",", @cnvsites);
+    print TOTOUTFILE "$temp\n";
+#    $temp = join(",", @sharedsites);
+#    print NUMOUTFILE "$temp\n";
+#    $temp = join(",", @proporsites);
+#    print PRPOUTFILE "$temp\n";
     close PAIROUTFILE1;
     system("rm temp_pairwise-$rand.MM");
 }
-
+#my $temp = join(",", @sharedsites);
+#print NUMOUTFILE "$temp\n";
+#$temp = join(",", @proporsites);
+#print PRPOUTFILE "$temp\n";
 # At this stage I should have generated a large file with a line for each indivdiual with each cnv base seperated by a comma.
