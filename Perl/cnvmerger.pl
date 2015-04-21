@@ -2,14 +2,6 @@
 use strict;
 use warnings;
 
-# Merges CNV information from multiple CNVnator runs
-# -i Provide an index of the start and dtop positions of each scaffold (scaff-name[tab]start[tab]stop)  [I might not use this]
-# -d Provide a direcory that contains all CNVnator output files
-# -p Provide a column number (5-8) for the p-values you want to use
-# -a Privide an alpha value for p-value acceptance criteria (default = 0.05)
-# -e or -u to curate dEletions or dUplications (this is done seperately so choose one OR the other)
-
-
 use Getopt::Std;
 my %opts;
 getopts('d:p:a:teu', \%opts);
@@ -23,7 +15,6 @@ my $rand = int(rand($max));
 unless ($opts{d})
 {
     print "\nMerges CNV information from multiple CNVnator runs\n";
-#    print "\n-i Provide an index of the start and stop positions of each scaffold (scaff-name[tab]start[tab]stop)  [I might not use this]";
     print "\n-d Provide a direcory that contains all CNVnator output files";
     print "\n-p Provide a column number (5-8) for the p-values you want to use (default = 5)";
     print "\n-a Privide an alpha value for p-value acceptance criteria (default = 0.05)";
@@ -33,6 +24,7 @@ unless ($opts{d})
     exit;
 }
 
+#################################### Set vairables #################################
 # Set $deldup to capture requred CNV
 my $deldup;
 if ($opts{e})
@@ -64,6 +56,8 @@ unless ($opts{a})
 $opts{p}=$opts{p}-1;
 my $addone = $opts{p}+1;    # Used in print below
 
+################################### Collect infiles ##############################
+
 opendir (DIR, $opts{d}) or die "\nCannot open directory\n$!\n\n";
 my @files = readdir DIR;
 closedir DIR;
@@ -76,7 +70,7 @@ foreach my $files (@files)
 print "CNVmerge.pl\nrandom number = $rand\nDirectory = $opts{d}\nCNV files = @cnvfiles\n";
 print "\n\nSampling \"$deldup\" sites at alpha = $opts{a} (column $addone)\n\n";
 
-#Script logic
+#################################### Script logic ###############################
 # For each CNV file:
 #   open for each line
 #       ask is it a deletion or duplication? (filter)
@@ -89,7 +83,7 @@ print "\n\nSampling \"$deldup\" sites at alpha = $opts{a} (column $addone)\n\n";
 #           Add or cound in dictionary
 #   Delete array or Name array IND-X (keep dictionary)
 #Add pairwise distance funtionality 
-
+##################################################################################
 my %eventhash;
 my $noind = scalar @cnvfiles;
 my @allcnv;
@@ -150,29 +144,31 @@ foreach (keys %eventhash)
     print OUTFILE "$_\t$eventhash{$_}\n";
 }
 system("sort -t\"_\" -k2,2n -k3,3n tempcnvmerg-$rand.MM > tempcnvmerg-$rand.MM2");
-print "Scaffold\tCNV\n";
+print "\nScaffold\tCNV\n";
 system("cat tempcnvmerg-$rand.MM2; rm tempcnvmerg-$rand.MM tempcnvmerg-$rand.MM2");
 
 # Really do the pairwise stuff that was collected in PAIROUTFILE
+# Compare each line of the output file to each line of the same file.
+# This file contains a line for each ind of the names of every position with a cnv in the genome
 my @cnvsites;   # Stores the number of cnv sites for each focal ind for addtion to a matrix later
 if ($opts{t})
 {
     close PAIROUTFILE;
     open (PAIROUTFILE1, "<$pairWout") or die "cannot open < $pairWout: $!";
-    open (PAIROUTFILE2, "<$pairWout");
     my %paireventhash;
     foreach my $fline (<PAIROUTFILE1>)
     {
+        open (PAIROUTFILE2, "<$pairWout");
         my @sharedsites;
         my @focal = split /,/, $fline;                  # Generate a focal array
-        my @query;
+        my @query;					# For the file2 array (when we open it)
         push @cnvsites, scalar $fline;                  ##### Total event No. bp (Focal) #####
         foreach my $qline (<PAIROUTFILE2>)              # Compare to each line of the query
         {   
             @query = split /,/, $qline;                 # Generate a query array
             push @query, @focal;                        # Add the focal array to it to be counted in the hash
             my $sharedsitescount = 0;                   # Count the sites that are shred for each query comparison and add each to
-            my $sharedsitespropr = 0;
+            my $sharedsitespropr = 0;			# Generate the proportion of shared sites given the total No. cnv sites
             foreach (@query)                            # Add each element to the hash and/or count it
             {
                 $paireventhash{$_}++;
@@ -185,8 +181,8 @@ if ($opts{t})
                 }
                 push (@sharedsites, $sharedsitescount); ##### No. Shared sites (Focal / Query) #####
             }
-            my $f = scalar $fline;
-            my $q = scalar $qline;
+            my $f = scalar @focal;
+            my $q = scalar @query;
             if ($f >= $q)                               ##### No. Shared sites (Focal / Query) #####
             {
                 $sharedsitespropr = $sharedsitescount / $f
@@ -199,10 +195,10 @@ if ($opts{t})
             # Here, save both No. Shared sites (Focal / Query) and No. Shared sites (Focal / Query) to an array
             # to print at the end of this focal indivdial
         }
+        close PAIROUTFILE2;
     }
     close PAIROUTFILE1;
-    close PAIROUTFILE2;
-    system("rm temp_pairwise-$rand.MM");
+    #system("rm temp_pairwise-$rand.MM");
 }
 
 # At this stage I should have generated a large file with a line for each indivdiual with each cnv base seperated by a comma.
