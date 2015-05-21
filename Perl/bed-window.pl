@@ -9,10 +9,6 @@ use Getopt::Std;
 my %opts;
 getopts('i:w:s:n:f:', \%opts);
 
-# Get random number for temp file suffix
-my $max = 999999999;
-my $rand = int(rand($max));
-
 unless ($opts{i})
 {
     print "\n######################################## bed-window ########################################";
@@ -23,6 +19,8 @@ unless ($opts{i})
     print "\n-s Slide width (default = 100000 = jumping window)";
     print "\nName each scaffold and increment? (not required)\n  -n scaffold-name\n  -f first scaffold number (default = 1)";
     print "\n   e.g. print an first column scaffold1... scaffold2... where -n scaffold -f 1";
+    print "\n\nYou can pipe in an infile try something like:";
+    print "\nfor i in {1..<lastline>}; do sed -n <print_even> fasta | wc; done | sed -n 2~2p | awk <print_col3> | bed-window.pl -i -";
     print "\n############################################################################################\n\n";
     exit;
 }
@@ -66,6 +64,7 @@ foreach my $line (<INFILE>)
             $end = $end+$opts{s};
         }
     }
+    $endscaff--;	# Remove 1 for last position on sfaccold
     if ($opts{n})
     {
         print "$opts{n}$opts{f}\t$start\t$endscaff\n";
