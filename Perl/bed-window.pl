@@ -64,7 +64,6 @@ foreach my $line (<INFILE>)
             $end = $end+$opts{s};
         }
     }
-    $endscaff--;	# Remove 1 for last position on sfaccold
     if ($opts{n})
     {
         print "$opts{n}$opts{f}\t$start\t$endscaff\n";
