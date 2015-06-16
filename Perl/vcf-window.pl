@@ -19,7 +19,7 @@ unless ($opts{i})
     print "\n######################################## vcf-window ##############################################";
     print "\nProduces sliding window density data from a .vcf (requires reference fasta for scaffold lengths).";
     print "\nWindow slides through column 2 (POS) of vcf input can be a multisample vcf.";
-    print "\nOutput is the proportion of effected sites per window.\n";
+    print "\nOutput is the proportion of effected sites per window (for circos).\n";
     print "\n-i Provide .vcf file\n-f Provide reference.fasta";
     print "\n-w Window size (default = 100000)";
     print "\n-s Slide width (default = 100000 = jumping window)";
@@ -36,7 +36,7 @@ unless ($opts{s})
 {
     $opts{s}=100000;
 }
-print "infile = $opts{i}; window = $opts{w}; slide = $opts{s}\n";
+print "# infile = $opts{i}; window = $opts{w}; slide = $opts{s}\n";
 my $winstart = 1;
 my $winend = $winstart + $opts{w} - 1;
 my $denominator = $winend - ($winstart - 1);
@@ -123,9 +123,19 @@ foreach my $line (<TEMPOUT>)     # Generate a Start and End array containing Sta
         my $length_bpmatch = scalar(@bpmatch);
         for (my $bpevent=0; $bpevent<$length_bpmatch; $bpevent++)      # Check each bp is within it
         {
-            if ($bpmatch[$bpevent]>=$windowS[$element] && $bpmatch[$bpevent]<=$windowE[$element])
+            if ($element>$lastwindow)
             {
-                $counter++                                          # And count
+                if ($bpmatch[$bpevent]>=$windowS[$element] && $bpmatch[$bpevent]<=$windowE[$lastwindow])
+                {
+                    $counter++                                          # And count
+                }
+            }
+            else
+            {
+            if ($bpmatch[$bpevent]>=$windowS[$element] && $bpmatch[$bpevent]<=$windowE[$element])
+                {
+                    $counter++                                          # And count
+                }
             }
         }
         $output = $counter/$denominator;
@@ -146,7 +156,7 @@ system("rm $tempout");
 #Hymenoscyphus_fraxineus_v2_scaffold_1 153
 #Hymenoscyphus_fraxineus_v2_scaffold_1 158
 #Hymenoscyphus_fraxineus_v2_scaffold_1 162
-##Hymenoscyphus_fraxineus_v2_scaffold_1 165
+#Hymenoscyphus_fraxineus_v2_scaffold_1 165
 #Hymenoscyphus_fraxineus_v2_scaffold_1 180
 #Hymenoscyphus_fraxineus_v2_scaffold_1 401
 #Hymenoscyphus_fraxineus_v2_scaffold_1 402
@@ -201,5 +211,3 @@ system("rm $tempout");
 #cat test.fas | tr -d '\n' > test
 #cat test | tr '>' '\n>' > test.fas
 #vim test.fas
-
-print "\n";
