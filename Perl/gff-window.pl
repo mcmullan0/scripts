@@ -133,7 +133,7 @@ if ($opts{w} >= $opts{s})   # If it is a jumping window open the file only once 
     my $proportionbp = $counter/$opts{w};       # Print last set of data once outside the loop
     print "$scaffcheck[0]    $winstart    $winend $proportionbp\n";
     close(TEMPOUT);
-    #system("rm $tempout");
+    system("rm $tempout");
 }
 else
 {

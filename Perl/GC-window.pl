@@ -21,7 +21,7 @@ use warnings;
 
 use Getopt::Std;
 my %opts;
-getopts('i:w:s:A', \%opts);
+getopts('i:w:s:', \%opts);
 
 unless ($opts{i})
 {
