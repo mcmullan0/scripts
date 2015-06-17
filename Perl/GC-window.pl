@@ -32,6 +32,7 @@ unless ($opts{i})
     print "\n-i Provide input fasta file";
     print "\n-w Window size (default = 100000)";
     print "\n-s Slide width (default = 100000 = jumping window)";
+    print "\n-A will calculate the AC content";
     print "\n############################################################################################\n\n";
     exit;
 }
@@ -51,6 +52,11 @@ my $header;             # Store fasta name / scaffld
 my $output;             # Store window ouput
 my $G = "G";            # Set important bp
 my $C = "C";
+if ($opts{A})
+{
+    $G = "A";
+    $C = "T";
+}
 my $dash = "-";
 my $unscr = "_";
 my $N = "N";
@@ -72,7 +78,7 @@ foreach my $line (<FASTA>)
     }
     else
     {
-        my $window = substr $line, $start, $opts{w};
+        my $window = substr $line, $start, $opts{w};    # Collect line then subset first window
         $start1 = $start + 1;
         $end1 = $start + $opts{w};
         chomp $window;
