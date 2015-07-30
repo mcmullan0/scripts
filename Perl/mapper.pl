@@ -114,15 +114,25 @@ for (my $i = 0; $i < $lineno; $i++)
 {
 #
 # mem | samtools -view | -sort | -rmdup | -index | -mpileup | bcftools view for raw .bcf
-##  if ($opts{p})
-##  {
-##    print "bsub -q $opts{q} -o $emailout-[$i].lsf -J mapper.pl -n 14 -R \"span[ptile=14]\" \"source samtools-0.1.19; source bwa-0.7.7; bwa mem -t 8 $opts{f} $read1list[$i] $read2list[$i] | samtools view -Sb - | samtools sort - $readolist[$i]-s; samtools rmdup $readolist[$i]-s.bam $readolist[$i]-sr.bam; samtools index $readolist[$i]-sr.bam; rm $readolist[$i]-s.bam; samtools mpileup -ugf $opts{f} $readolist[$i]-sr.bam | bcftools view -bvcg - > $readolist[$i]-sr.raw.bcf\"\n";
-##  }
-## else
-##  {
-##    system("bsub -q $opts{q} $emailout-[$i].lsf -J mapper.pl -n 14 -R \"span[ptile=14]\" \"source samtools-0.1.19; source bwa-0.7.7; bwa mem -t 8 $opts{f} $read1list[$i] $read2list[$i] | samtools view -Sb - | samtools sort - $readolist[$i]-s; samtools rmdup $readolist[$i]-s.bam $readolist[$i]-sr.bam; samtools index $readolist[$i]-sr.bam; rm $readolist[$i]-s.bam; samtools mpileup -ugf $opts{f} $readolist[$i]-sr.bam | bcftools view -bvcg - > $readolist[$i]-sr.raw.bcf\"");
-##  }
+# Added -h to samtools view to keep header information 28/05/15
+  if ($opts{p})
+  {
+    print "bsub -q $opts{q} -o $emailout-[$i].lsf -J mapper.pl -n 14 -R \"span[ptile=14]\" \"source samtools-0.1.19; source bwa-0.7.7; bwa mem -t 8 $opts{f} $read1list[$i] $read2list[$i] | samtools view -Shb - | samtools sort - $readolist[$i]-s; samtools rmdup $readolist[$i]-s.bam $readolist[$i]-sr.bam; samtools index $readolist[$i]-sr.bam; rm $readolist[$i]-s.bam; samtools mpileup -uDgf $opts{f} $readolist[$i]-sr.bam | bcftools view -bvcg - > $readolist[$i]-sr.raw.bcf\"\n";
+  }
+ else
+  {
+    system("bsub -q $opts{q} $emailout-[$i].lsf -J mapper.pl -n 14 -R \"span[ptile=14]\" \"source samtools-0.1.19; source bwa-0.7.7; bwa mem -t 8 $opts{f} $read1list[$i] $read2list[$i] | samtools view -Shb - | samtools sort - $readolist[$i]-s; samtools rmdup $readolist[$i]-s.bam $readolist[$i]-sr.bam; samtools index $readolist[$i]-sr.bam; rm $readolist[$i]-s.bam; samtools mpileup -uDgf $opts{f} $readolist[$i]-sr.bam | bcftools view -bvcg - > $readolist[$i]-sr.raw.bcf\"");
+  }
 #
+# mem | samtools -view | -sort | -rmdup | -index > save .bams for multisample vcf [27/05/15] got an EOF absent messege...
+#  if ($opts{p})
+#  {
+#    print "bsub -q $opts{q} -o $emailout-[$i].lsf -J mapper.pl -n 14 -R \"span[ptile=14]\" \"source samtools-0.1.19; source bwa-0.7.7; bwa mem -t 8 $opts{f} $read1list[$i] $read2list[$i] | samtools view -Shb - | samtools sort - $readolist[$i]-s; samtools rmdup $readolist[$i]-s.bam $readolist[$i]-sr.bam; samtools index $readolist[$i]-sr.bam; rm $readolist[$i]-s.bam\"\n";
+#  }
+# else
+#  {
+#    system("bsub -q $opts{q} $emailout-[$i].lsf -J mapper.pl -n 14 -R \"span[ptile=14]\" \"source samtools-0.1.19; source bwa-0.7.7; bwa mem -t 8 $opts{f} $read1list[$i] $read2list[$i] | samtools view -Shb - | samtools sort - $readolist[$i]-s; samtools rmdup $readolist[$i]-s.bam $readolist[$i]-sr.bam; samtools index $readolist[$i]-sr.bam; rm $readolist[$i]-s.bam;\"");
+#  }
 #
 # Stop at pileup file
 # mem
@@ -175,12 +185,12 @@ for (my $i = 0; $i < $lineno; $i++)
 #
 #
 # Tophat-chalara 
-  if ($opts{p})
-  {
-    print "bsub -q $opts{q} -o $emailout-[$i].lsf -J mapper.pl -n 16 -R \"span[ptile=16]  rusage[mem=10240]\" \"source bowtie-2.2.4; source tophat-2.0.9; tophat -r $meaninsert[$i] --mate-std-dev $stdvinsert[$i] --min-anchor 12 --max-multihits 20 --min-intron-length 50 --max-intron-length 10000 --no-coverage-search --min-coverage-intron 50 --max-coverage-intron 5000 --min-segment-intron 50 --max-segment-intron 10000 --library-type fr-unstranded --num-threads 16 -o $opts{o}/$readolist[$i] $opts{f} $read1list[$i] $read2list[$i]\"\n";
-  }
- else
-  {
-    system("bsub -q $opts{q} $emailout-[$i].lsf -J mapper.pl -n 16 -R \"span[ptile=16]  rusage[mem=10240]\" \"source bowtie-2.2.4; source tophat-2.0.9; tophat -r $meaninsert[$i] --mate-std-dev $stdvinsert[$i] --min-anchor 12 --max-multihits 20 --min-intron-length 50 --max-intron-length 10000 --no-coverage-search --min-coverage-intron 50 --max-coverage-intron 5000 --min-segment-intron 50 --max-segment-intron 10000 --library-type fr-unstranded --num-threads 16 -o $opts{o}/$readolist[$i] $opts{f} $read1list[$i] $read2list[$i]\"");
-  }
+#  if ($opts{p})
+#  {
+#    print "bsub -q $opts{q} -o $emailout-[$i].lsf -J mapper.pl -n 16 -R \"span[ptile=16]  rusage[mem=10240]\" \"source bowtie-2.2.4; source tophat-2.0.9; tophat -r $meaninsert[$i] --mate-std-dev $stdvinsert[$i] --min-anchor 12 --max-multihits 20 --min-intron-length 50 --max-intron-length 10000 --no-coverage-search --min-coverage-intron 50 --max-coverage-intron 5000 --min-segment-intron 50 --max-segment-intron 10000 --library-type fr-unstranded --num-threads 16 -o $opts{o}/$readolist[$i] $opts{f} $read1list[$i] $read2list[$i]\"\n";
+#  }
+# else
+#  {
+#    system("bsub -q $opts{q} $emailout-[$i].lsf -J mapper.pl -n 16 -R \"span[ptile=16]  rusage[mem=10240]\" \"source bowtie-2.2.4; source tophat-2.0.9; tophat -r $meaninsert[$i] --mate-std-dev $stdvinsert[$i] --min-anchor 12 --max-multihits 20 --min-intron-length 50 --max-intron-length 10000 --no-coverage-search --min-coverage-intron 50 --max-coverage-intron 5000 --min-segment-intron 50 --max-segment-intron 10000 --library-type fr-unstranded --num-threads 16 -o $opts{o}/$readolist[$i] $opts{f} $read1list[$i] $read2list[$i]\"");
+#  }
 }
