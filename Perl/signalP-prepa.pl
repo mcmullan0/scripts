@@ -1,3 +1,5 @@
+######### Do Not Use ############ This spoils the gff format
+
 #!/usr/bin/perl
 use strict;
 use warnings;
