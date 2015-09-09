@@ -20,7 +20,7 @@ unless ($opts{i})
     print "\nName each scaffold and increment? (not required)\n  -n scaffold-name\n  -f first scaffold number (default = 1)";
     print "\n   e.g. print an first column scaffold1... scaffold2... where -n scaffold -f 1";
     print "\n\nYou can pipe in an infile try something like:";
-    print "\nfor i in {1..<lastline>}; do sed -n <print_even> fasta | wc; done | sed -n 2~2p | awk <print_col3> | bed-window.pl -i -";
+    print "\nfor i in {1..<lastline>}; do sed -n \$i fasta | wc; done | sed -n 2~2p | awk <print_col3> | bed-window.pl -i -";
     print "\n############################################################################################\n\n";
     exit;
 }
