@@ -31,7 +31,7 @@ my ($ext) = $opts{g} =~ /(\.[^.]+)$/;
 # First use awk to print a coordinates .txt file
 system("awk '\$3==\"gene\" {print \$1,\$3,\$4,\$5,\$7,\$9}' $prefix$ext > $prefix.txt");
 
-my $firstline = 0;
+my $firstline = 1;
 my @line1;						# The line containing the gene before the focal gene
 my @line2;						# The subsequent line for the gene to be extended
 my @prev_plus;						# In case 2 genes overlap this is the last + strand gene preceeding @line1
@@ -42,7 +42,7 @@ open(OUTFILE, ">$prefix.ext.txt");
 foreach my $line (<TXTFILE>)
 {
     chomp $line;
-    if ($firstline == 1)				# Load the first line in first and then compare pairs of lines
+    if ($firstline == 0)				# Load the first line in first and then compare pairs of lines
     {
         if ($line1[4] eq '+')				# Put line1 either in the prev+ or prev- depeding on strand in case of overlap
         {
@@ -69,27 +69,27 @@ foreach my $line (<TXTFILE>)
                 {
                     if ($plus_or_minus eq '+' && $newstart > $prev_plus[3]) # If + but long way from prev_plus = print
                     {
-                        print OUTFILE "$line2[0]\t$line2[1]\t$newstart\t$line2[3]\t$line2[4]\t$line2[5] -here=overlap_far+\n";
+                        print OUTFILE "$line2[0]\t$line2[1]\t$newstart\t$line2[3]\t$line2[4]\t$line2[5]\n";
                     }
                     elsif ($plus_or_minus eq '+' && $newstart <= $prev_plus[3]) # If + but near prev_plus = add 1 to end of prev_plus
                     {
                         $newstart = $prev_plus[3] + 1;
-                        print OUTFILE "$line2[0]\t$line2[1]\t$newstart\t$line2[3]\t$line2[4]\t$line2[5] -here=overlap_near+\n";
+                        print OUTFILE "$line2[0]\t$line2[1]\t$newstart\t$line2[3]\t$line2[4]\t$line2[5]\n";
                     }
                     elsif ($plus_or_minus eq '-' && $newstart > $prev_minus[3]) # If - but long way from prev_minus = print
                     {
-                        print OUTFILE "$line2[0]\t$line2[1]\t$newstart\t$line2[3]\t$line2[4]\t$line2[5] -here=overlap_far-\n";
+                        print OUTFILE "$line2[0]\t$line2[1]\t$newstart\t$line2[3]\t$line2[4]\t$line2[5]\n";
                     }
                     elsif ($plus_or_minus eq '-' && $newstart <= $prev_minus[3]) # If + but near prev_minus = +1 to end of prev_minus
                     {
                         $newstart = $prev_minus[3] + 1;
-                        print OUTFILE "$line2[0]\t$line2[1]\t$newstart\t$line2[3]\t$line2[4]\t$line2[5] -here=overlap_near-\n";
+                        print OUTFILE "$line2[0]\t$line2[1]\t$newstart\t$line2[3]\t$line2[4]\t$line2[5]\n";
                     }
                 }
                 elsif ($less1000 < $opts{e})		# If samller than $opts{e} then extend to previous end +1
                 {
                     $newstart = $line1[3]+1;
-                    print OUTFILE "$line2[0]\t$line2[1]\t$newstart\t$line2[3]\t$line2[4]\t$line2[5] -here=proximity\n";
+                    print OUTFILE "$line2[0]\t$line2[1]\t$newstart\t$line2[3]\t$line2[4]\t$line2[5]\n";
                 }
                 else
                 {
@@ -100,21 +100,21 @@ foreach my $line (<TXTFILE>)
             {
                 if ($plus_or_minus eq '+' && $newstart > $prev_plus[3]) # If + but long way from prev_plus = print
                 {
-                    print OUTFILE "$line2[0]\t$line2[1]\t$newstart\t$line2[3]\t$line2[4]\t$line2[5] -here=Nooverlap_far+\n";
+                    print OUTFILE "$line2[0]\t$line2[1]\t$newstart\t$line2[3]\t$line2[4]\t$line2[5]\n";
                 }
                 elsif ($plus_or_minus eq '+' && $newstart <= $prev_plus[3]) # If + but near prev_plus = add 1 to end of prev_plus
                 {
                     $newstart = $prev_plus[3] + 1;
-                    print OUTFILE "$line2[0]\t$line2[1]\t$newstart\t$line2[3]\t$line2[4]\t$line2[5] -here=Nooverlap_near+\n";
+                    print OUTFILE "$line2[0]\t$line2[1]\t$newstart\t$line2[3]\t$line2[4]\t$line2[5]\n";
                 }
                 elsif ($plus_or_minus eq '-' && $newstart > $prev_minus[3]) # If - but long way from prev_minus = print
                 {
-                    print OUTFILE "$line2[0]\t$line2[1]\t$newstart\t$line2[3]\t$line2[4]\t$line2[5] -here=Nooverlap_far-\n";
+                    print OUTFILE "$line2[0]\t$line2[1]\t$newstart\t$line2[3]\t$line2[4]\t$line2[5]\n";
                 }
                 elsif ($plus_or_minus eq '-' && $newstart <= $prev_minus[3]) # If + but near prev_minus = +1 to end of prev_minus
                 {
                     $newstart = $prev_minus[3] + 1;
-                    print OUTFILE "$line2[0]\t$line2[1]\t$newstart\t$line2[3]\t$line2[4]\t$line2[5] -here=Nooverlap_near-\n";
+                    print OUTFILE "$line2[0]\t$line2[1]\t$newstart\t$line2[3]\t$line2[4]\t$line2[5]\n";
                 }
             }
         }
@@ -136,7 +136,7 @@ foreach my $line (<TXTFILE>)
             $newstart = 1;
         }
         print OUTFILE "$line2[0]\t$line2[1]\t$newstart\t$line2[3]\t$line2[4]\t$line2[5]\n";
-        $firstline = 1;
+        $firstline = 0;
         $line1[4] = "EMPTY";				# Provide something to line1 instead of + or - to prevent saving to prev_plus
     }
 }
