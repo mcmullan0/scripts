@@ -146,18 +146,16 @@ foreach my $line (<TXTFILE>)
             {
                 $newstart = $end_of_current_scaff;
             }
-            elsif ($newstart = $end_of_current_scaff)
+            elsif ($newstart != $end_of_current_scaff)
             {								# For while loop:
                 my $next_neg = "+";                                     	# Start as a plus highlight when we find a minus
-                my $startfrom = $line_tiefile;					# Start counting from the line we are on
-                my $leavloop_nextstartfrom = $startfrom;		# A hacky way to leave the loop as $startfrom++ is at start
+                my $startfrom = $line_tiefile + 1;					# Start counting from the line we are on
                 # Move through gff txt file from next position until we find the next -ve
-                while ($next_neg eq "+" && $startfrom < $lgfftxtfile && $leavloop_nextstartfrom < $lgfftxtfile)
+                while ($next_neg eq "+" && $startfrom < $lgfftxtfile)
                 {
-                    $startfrom++;
                     @prev_minus = split /\s+/, $gfftxtfile[$startfrom];
                     $next_neg = $prev_minus[4];
-                    $leavloop_nextstartfrom = $startfrom + 1;
+                    $startfrom++;
                 }
 		# If found a - on same scaff, before gff txt file end and -gene start overlaps with next- end continue search
                 if ($next_neg eq "-" && $line2[0] eq $prev_minus[0] && $line2[3] > $prev_minus[2])
@@ -165,9 +163,9 @@ foreach my $line (<TXTFILE>)
                     $next_neg = "+";
                     while ($next_neg eq "+" && $startfrom < $lgfftxtfile)
                     {
-                        $startfrom++;
                         @prev_minus = split /\s+/, $gfftxtfile[$startfrom];
                         $next_neg = $prev_minus[4];
+                        $startfrom++;
                     }
                 }
                 # If we found a - on same scaff, before gff txt file end and it is greater than beg of next gene reduce
@@ -202,15 +200,15 @@ foreach my $line (<TXTFILE>)
             {
                 $newstart = $end_of_current_scaff;
             }
-            else
+            elsif ($newstart != $end_of_current_scaff)
             {
                 my $next_neg = "+";
-                my $startfrom = $line_tiefile;
+                my $startfrom = $line_tiefile = 1;
                 while ($next_neg eq "+" && $startfrom < $lgfftxtfile)
                 {
-                    $startfrom++;
                     @prev_minus = split /\s+/, $gfftxtfile[$startfrom];
                     $next_neg = $prev_minus[4];
+                    $startfrom++;
                 }
                 if ($next_neg eq "-" && $line2[0] eq $prev_minus[0] && $line2[3] > $prev_minus[2])
                 {
