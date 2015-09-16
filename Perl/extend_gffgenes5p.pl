@@ -32,15 +32,13 @@ unless ($opts{g} && $opts{i} && $opts{e})
 my ($prefix) = $opts{i} =~ /(.*)?\./;			# Get prefix for outfiles
 my ($ext) = $opts{i} =~ /(\.[^.]+)$/;			# Get extension for outfile
 
-# 1 use awk to print a coordinates .txt file
+### 1 use awk to print a coordinates .txt file
 system("awk '\$3==\"gene\" {print \$1,\$3,\$4,\$5,\$7,\$9}' $prefix$ext > $prefix.txt");
-my @gfftxtfile;                                         # Array of $prefix.txt allows us to look ahead to see how close the next gene is (-ve strand)
+my @gfftxtfile;                                         # Array of $prefix.txt allows us to look ahead in .gff to find next - gene
 tie @gfftxtfile, 'Tie::File', "$prefix.txt";
-my $fileend = scalar(@gfftxtfile);
 
 
-
-#	> 1.1 This requires that we know scaffold lengths so now we need to load the genome.fa...
+###	> 1.1 This requires that we know scaffold lengths so now we need to load the genome.fa...
 print STDERR "\nextend_gffgenes5p:\nCreating genome.fa index...\n";
 my @fasseqs;
 my @scafflengths;
@@ -71,15 +69,11 @@ print STDERR "\nIndex created\nThere are $no_scaffs sequences in $opts{g}.\n";
 print STDERR "\nGenerating extended positions file:\n($prefix.ext.txt)...\n\n";
 
 
-
-# 2 print extensions in a new coodinates file
+### 2 print extensions in a new coodinates file
 my $line_tiefile = -1;					# Counter to identify which line we are on in the gff txt file array.
-my $line_safflengths = 0;				# The position marker for @scafflengths
-my $lgfftxtfile = scalar(@gfftxtfile);			# So we know when we have reached the end of the file (used when searching for the next -ve gene)
+my $lgfftxtfile = scalar(@gfftxtfile);			# So we know when we have reached the end of the gff file (-gene)
 my $firstline = 1;
-#my @line1;						# The line containing the gene before the focal gene
-my @line2;						# The subsequent line for the gene to be extended
-my @line1;						# Holds the previous line no matter what it was
+my @line2;						# The focal line (line 1 was replaced with prev + prev -)
 my @prev_plus;						# In case 2 genes overlap this is the last + strand gene preceeding @line1
 my $prev_plus_empty = 0;				# Have we seen a plus gene in this scaffold yet?
 my @prevprev_plus;                                      # The plus before the previous (incase of an overlap)
@@ -95,13 +89,12 @@ foreach my $line (<TXTFILE>)
     $line_tiefile++;
     my @precurser = split /\s+/, $line;
     
-    my $plus_or_minus = $precurser[4];                  # Which strand we are on is important if genes overlap as we need to find prev (+) or next (-)
+    my $plus_or_minus = $precurser[4];                  # Which strand we are on (+) or (-)
     if ($firstline == 0)				# Load the first line in first and then compare pairs of lines
     {
-        if ($line2[4] eq '+')				# Put line1 either in the prev+ if it is a + 
+        if ($line2[4] eq '+')
         {
-# If precurser overlaps with line 2 keep the previous precurser
-            if ($prev_plus_empty == 1)
+            if ($prev_plus_empty == 1)			# Keep the previous precurser in case precurser overlaps with line 2
             {
                 @prevprev_plus = @prev_plus;
                 $prevprev_plus_empty = 1;
@@ -109,32 +102,27 @@ foreach my $line (<TXTFILE>)
             @prev_plus = @line2;
             $prev_plus_empty = 1;
         }
-#        else
-#        {
-#            $prev_plus_empty = 0;
-#            $prevprev_plus_empty = 0;
-#        }
         @line2 = @precurser;
-        if ($plus_or_minus eq "+")
+        if ($plus_or_minus eq "+")			# Split script in to + and - to search left or right for prev gene
 ####################################################### extend LHS ###################################################
         {
             $newstart = $line2[2] - $opts{e};
-            if ($newstart < 1)                         				# If the gene is close to the beggining of the scaff don't extend past first bp
+            if ($newstart < 1)                         			# Don't extend past first bp
             {
                 $newstart = 1;
             }
-            elsif ($prev_plus_empty == 1 && $newstart != 1)		# If there is a previous plus gene > on the same scaffold check distance and prev is a + else print
+            elsif ($prev_plus_empty == 1 && $newstart != 1)		# Check for prev gene on same scaff else print newsetar
             {
-                if ($line2[0] eq @prev_plus[0])
+                if ($line2[0] eq $prev_plus[0])
                 {
                     my $already_overlap = $line2[2] - ($prev_plus[3]+1);
-                    if ($already_overlap < 0 && $prevprev_plus_empty == 1)		# If our gene and the previous plus and our focal gene already overlap && we have a prev prev plus use it as prev
+                    if ($already_overlap < 0 && $prevprev_plus_empty == 1)# If our gene & prev + overlap && use prevprev+ if availible
                     {
                         @prev_plus = @prevprev_plus;
                         $prevprev_plus_empty = 0;
                     }
-                    my $less1000 = $newstart-($prev_plus[3]+1);                     # This gives the number of bp between genes
-                    if ($less1000 < 0)                      			# If negative they overlap so extend $opts{e} or to prev gene on same strand
+                    my $less1000 = $newstart-($prev_plus[3]+1);		# This gives the number of bp between genes
+                    if ($less1000 < 0)                      		# If negative they overlap = extend $opts{e} to prev gene
                     {
                         $newstart = $prev_plus[3] + 1;
                     }
@@ -154,23 +142,25 @@ foreach my $line (<TXTFILE>)
             $newstart = $line2[3] + $opts{e};
             my $current_scaff = $line2[0];
             my $end_of_current_scaff = $scaff_lenghts{$current_scaff};
-            if ($newstart > $end_of_current_scaff)				# If the gene is close to the end of the scaff don't extend past last bp
+            if ($newstart > $end_of_current_scaff)			# Don't extend past last bp
             {
-                $newstart != $end_of_current_scaff;
+                $newstart = $end_of_current_scaff;
             }
             elsif ($newstart = $end_of_current_scaff)
-            {
-                my $next_neg = "+";                                                 # Start as a plus highlight when we find a minus
-                my $startfrom = $line_tiefile;                                      # Start counting from the line we are on
-                my $leavloop_nextstartfrom = $startfrom;		# A hacky way to leave the whily loop as I started teh iteration of start from at the beggining not the end
-                while ($next_neg eq "+" && $startfrom < $lgfftxtfile && $leavloop_nextstartfrom < $fileend)               # Move through gff txt file from next position until we find the next -ve
+            {								# For while loop:
+                my $next_neg = "+";                                     	# Start as a plus highlight when we find a minus
+                my $startfrom = $line_tiefile;					# Start counting from the line we are on
+                my $leavloop_nextstartfrom = $startfrom;		# A hacky way to leave the loop as $startfrom++ is at start
+                # Move through gff txt file from next position until we find the next -ve
+                while ($next_neg eq "+" && $startfrom < $lgfftxtfile && $leavloop_nextstartfrom < $lgfftxtfile)
                 {
                     $startfrom++;
                     @prev_minus = split /\s+/, $gfftxtfile[$startfrom];
                     $next_neg = $prev_minus[4];
                     $leavloop_nextstartfrom = $startfrom + 1;
                 }
-                if ($next_neg eq "-" && $line2[0] eq $prev_minus[0] && $line2[3] > $prev_minus[2])  # If found a - on same scaff, before gff txt end and our -gene start overlaps with next- end cont search
+		# If found a - on same scaff, before gff txt file end and -gene start overlaps with next- end continue search
+                if ($next_neg eq "-" && $line2[0] eq $prev_minus[0] && $line2[3] > $prev_minus[2])
                 {
                     $next_neg = "+";
                     while ($next_neg eq "+" && $startfrom < $lgfftxtfile)
@@ -180,7 +170,8 @@ foreach my $line (<TXTFILE>)
                         $next_neg = $prev_minus[4];
                     }
                 }
-                if ($next_neg eq "-" && $line2[0] eq $prev_minus[0] && $newstart > $prev_minus[2])  # If we found a - on same scaff, before gff txt file end and it is greater than 3' end of next gene reduce
+                # If we found a - on same scaff, before gff txt file end and it is greater than beg of next gene reduce
+                if ($next_neg eq "-" && $line2[0] eq $prev_minus[0] && $newstart > $prev_minus[2])
                 {
                     $newstart = $prev_minus[2] - 1;
                 }
@@ -188,10 +179,10 @@ foreach my $line (<TXTFILE>)
             print OUTFILE "$line2[0]\t$line2[1]\t$line2[2]\t$newstart\t$line2[4]\t$line2[5]\n";
         }
     }
-    else 									# This is the first line of the input and beeds to be run seperatly
+    else 								# This is the first line of the input run seperatly
     {
-        @line2 = @precurser;        						# (Gets passed to line1 in the next step)
-        if ($plus_or_minus eq '+')						# If plus - $opts{e} unless it is too close to the beggining of the scaffold
+        @line2 = @precurser;        			
+        if ($plus_or_minus eq '+')					# If + else -
 ######################################################## extend LHS ###################################################
         {
             $newstart = $line2[2] - $opts{e};
@@ -201,7 +192,7 @@ foreach my $line (<TXTFILE>)
             }
             print OUTFILE "$line2[0]\t$line2[1]\t$newstart\t$line2[3]\t$line2[4]\t$line2[5]\n";
         }
-        else									# Else it's a negative and we must find the next negative or the end of the scaffold
+        else								# Else it negative find the next negative or end of scaffold
 ######################################################## extend RHS ###################################################
         {
             # find the next negative ON SAME SCAFF, if next scaff get the scaff end position, ADD $opts{e} to $line2[3], if $line2[3] > scaff length $line2[3] = scaff length
@@ -213,15 +204,15 @@ foreach my $line (<TXTFILE>)
             }
             else
             {
-                my $next_neg = "+";							# Start as a plus highlight when we find a minus
-                my $startfrom = $line_tiefile;					# Start counting from the line we are on
-                while ($next_neg eq "+" && $startfrom < $lgfftxtfile)		# Move through gff txt file from next position until we find the next -ve  
+                my $next_neg = "+";
+                my $startfrom = $line_tiefile;
+                while ($next_neg eq "+" && $startfrom < $lgfftxtfile)
                 {
                     $startfrom++;
                     @prev_minus = split /\s+/, $gfftxtfile[$startfrom];
                     $next_neg = $prev_minus[4];
                 }
-                if ($next_neg eq "-" && $line2[0] eq $prev_minus[0] && $line2[3] > $prev_minus[2])  # If found a - on same scaff, before gff txt end and our -gene start overlaps with next- end cont search
+                if ($next_neg eq "-" && $line2[0] eq $prev_minus[0] && $line2[3] > $prev_minus[2])
                 {
                     $next_neg = "+";
                     while ($next_neg eq "+" && $startfrom < $lgfftxtfile)
@@ -231,7 +222,7 @@ foreach my $line (<TXTFILE>)
                         $next_neg = $prev_minus[4];
                     }
                 }
-                if ($next_neg eq "-" && $line2[0] eq $prev_minus[0] && $newstart > $prev_minus[2])	# If found a - on same scaff, before gff txt end and it is greater than 3' end of next gene reduce 
+                if ($next_neg eq "-" && $line2[0] eq $prev_minus[0] && $newstart > $prev_minus[2])
                 {
                     $newstart = $prev_minus[2] - 1;
                 }
@@ -239,12 +230,13 @@ foreach my $line (<TXTFILE>)
             print OUTFILE "$line2[0]\t$line2[1]\t$line2[2]\t$newstart\t$line2[4]\t$line2[5]\n";
         }
         $firstline = 0;
-#        $line1[4] = "EMPTY";				# Provide something to line1 instead of + or - to prevent saving to prev_plus        ############# CHECK THIS AS I NOW DEFINE PLUS OR MINUS EARLY #
     }
 }
 close(TXTFILE);
 untie @gfftxtfile;
 print "\nYour outfiles are:\n$prefix.txt (Gene designation)\n$prefix.ext.txt (extensions)\n\n";
+
+# The genome file was cha_soap_ope_lmp_k111r.scafSeq.fasta
 # Testfile
 # scaffold1 . gene 44902 46151 . - . ID=First_Gene
 # scaffold1 . gene 47537 48736 . - . ID=Second_Gene_not_so_close
@@ -270,4 +262,3 @@ print "\nYour outfiles are:\n$prefix.txt (Gene designation)\n$prefix.ext.txt (ex
 # scaffold6 . gene 75657 77567 . - . ID=First,_will_overlap_second_so_should_start_at_before_77900_(Third)
 # scaffold6 . gene 77001 77800 . - . ID=Second_overlap_first_and_close_to_third_so_should_be_77899
 # scaffold6 . gene 77900 3444800 . - . ID=Third_Should_end_at_scaffold_end_3444827
-# The genome file was cha_soap_ope_lmp_k111r.scafSeq.fasta
