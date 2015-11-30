@@ -21,18 +21,20 @@ use warnings;
 
 use Getopt::Std;
 my %opts;
-getopts('i:w:s:', \%opts);
+getopts('i:w:s:An', \%opts);
 
 unless ($opts{i})
 {
     print "\n######################################## GC-window ########################################";
-    print "\nGC-window.pl calculates GC content within a window across a multi-sequence fasta file";
+    print "\nGC-window.pl calculates GC content within a window across a multi-sequence fasta file (handels both upper and lower case)";
+    print "\nConsider first running fastchar.pl to check you don't have any unusual text in your sequences";
     print "\nOutput contains three columns which are scaff-name, window midpoint and GC content";
     print "\nDivides by window size minus the number of 'n' and/or 'N' and/or '-'";
     print "\n-i Provide input fasta file";
     print "\n-w Window size (default = 100000)";
     print "\n-s Slide width (default = 100000 = jumping window)";
     print "\n-A will calculate the AC content";
+    print "\n-n will calculate the n|N|_|- (gap) content";
     print "\n############################################################################################\n\n";
     exit;
 }
@@ -46,7 +48,20 @@ unless ($opts{s})
 {
     $opts{s}=100000;
 }
-print "# GC content for infile = $opts{i}; window = $opts{w}; slide = $opts{s}\n";
+my $whatbase;
+if ($opts{A})
+{
+  $whatbase = "AT";
+}
+elsif ($opts{n})
+{
+  $whatbase = "n or N or _ or -";
+}
+else
+{
+  $whatbase = "GC";
+}
+print "# $whatbase content for infile = $opts{i}; window = $opts{w}; slide = $opts{s}\n";
 
 my $header;             # Store fasta name / scaffld
 my $output;             # Store window ouput
@@ -82,23 +97,30 @@ foreach my $line (<FASTA>)
         $start1 = $start + 1;
         $end1 = $start + $opts{w};
         chomp $window;
-        my $ucwindow = uc $window;
+        my $ucwindow = uc $window;			# Uppercase window
         # Count bases G and C and spaces
         my $Gc = () = $ucwindow =~ /$G/g;
         my $Cc = () = $ucwindow =~ /$C/g;
         my $dashc = () = $ucwindow =~ /$dash/g;
         my $unscrc = () = $ucwindow =~ /$unscr/g;
         my $Nc = () = $ucwindow =~ /$N/g;
-        # Sum the groups 
+        # Sum the groups
         my $GC = $Gc + $Cc;
         my $space = $dashc + $unscrc + $Nc;
-        if ($opts{w} == $space)                 # If all the window is space save program from dividing by zero
+        if ($opts{n})
         {
-            $output = 0;
+            $output = $space/$opts{w};
         }
         else
         {
-            $output = $GC/($opts{w} - $space);
+            if ($opts{w} == $space)                 # If all the window is space save program from dividing by zero
+            {
+                $output = 0;
+            }
+            else
+            {
+                $output = $GC/($opts{w} - $space);
+            }
         }
         print "$header  $start1 $end1   $output\n";
         my $length = length($ucwindow);
@@ -120,27 +142,44 @@ foreach my $line (<FASTA>)
             $length = length($ucwindow);
             if ($length == $opts{w})
             {
-                if ($length == $space)                 # If all the window is space save program from dividing by zero
+                if ($opts{n})
                 {
-                    $output = 0;
+                    $output = $space/$opts{w};
                 }
                 else
                 {
-                    $output = $GC/($opts{w} - $space);
+                    if ($length == $space)                 # If all the window is space save program from dividing by zero
+                    {
+                        $output = 0;
+                    }
+                    else
+                    {
+                        $output = $GC/($opts{w} - $space);
+                    }
                 }
                 print "$header  $start1 $end1   $output\n";
             }
             else
             {   
-                if ($length == $space)                 # If all the window is space save program from dividing by zero
+                if ($length > 0)
                 {
-                    $output = 0;
+                    if ($opts{n})
+                    {
+                        $output = $space/$length;
+                    }
+                    else
+                    {
+                        if ($length == $space)                 # If all the window is space save program from dividing by zero
+                        {
+                            $output = 0;
+                        }
+                        else
+                        {
+                            $output = $GC/($length - $space);
+                        }
+                    }
+                    print "$header  $start1 $end1   $output\n";
                 }
-                else
-                {
-                    $output = $GC/($length - $space);
-                }    
-                print "$header  $start1 $end1   $output\n";
             }
         }
     }
