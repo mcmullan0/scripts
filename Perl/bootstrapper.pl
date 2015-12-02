@@ -11,7 +11,7 @@ unless ($opts{i} && $opts{c} && $opts{r} && $opts{b} && $opts{o})
     print "\nPerforms a bootstrap test on a column of data by comparing one observed result (mean) to any number of artificical samples from the same column.";
     print "\n-i Provide a tab delimited file of data in columns";
     print "\n-c Which column is the target data in?";
-    print "\n-r how many consequtive rows encompases the data";
+    print "\n-r how many consequtive rows encompases the sample of the data";
     print "\n-b how many iterations to run?";
     print "\n-o which is the first row of the observed data?";
     print "\n##################################################################################################\n\n";
@@ -85,7 +85,7 @@ foreach my $element (@observed)
 }
 my $omean = $total/$opts{r};
 
-print "99%	$e99\n97.5%	$e98\n95%	$e95\n50%	$e50\n5%	$e5\n2.5%	$e3\n1%	%e1\nexpMean	$emean\nobsMean	$omean\n";
+print "99%	$e99\n97.5%	$e98\n95%	$e95\n50%	$e50\n5%	$e5\n2.5%	$e3\n1%	$e1\nexpMean	$emean\nobsMean	$omean\n";
 
 # Get test statistic
 my $array_pos = 0;
