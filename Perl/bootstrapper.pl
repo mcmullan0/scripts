@@ -3,17 +3,18 @@ use strict;
 use warnings;
 use Getopt::Std;
 my %opts;
-getopts('i:c:r:b:o:', \%opts);
+getopts('i:c:r:b:o:p', \%opts);
 
 unless ($opts{i} && $opts{c} && $opts{r} && $opts{b} && $opts{o})
 {
     print "\n######################################## bootstrapper ##############################################";
-    print "\nPerforms a bootstrap test on a column of data by comparing one observed result (mean) to any number of artificical samples from the same column.";
+    print "\nPerforms a bootstrap test on a column of data by comparing one observed result (mean) to any number\nof artificical samples from the same column.";
     print "\n-i Provide a tab delimited file of data in columns";
     print "\n-c Which column is the target data in?";
     print "\n-r how many consequtive rows encompases the sample of the data";
     print "\n-b how many iterations to run?";
     print "\n-o which is the first row of the observed data?";
+    print "\n-p Print the expected distribution in a MM.bootstrapper.xxxxxx.MM file";
     print "\n##################################################################################################\n\n";
     exit;
 }
@@ -104,6 +105,24 @@ my $percentile = $position/$opts{b};
 print "observed value is in the $percentile percentile\n\n";
 if ($percentile < 0)
 {
-  print "Percentile is negative.  Your observed is outside the distrubution. Check your data and or use more iterations (increase -b)\n\n"
+  print "Percentile is negative.  Your observed is outside the distrubution. Check your data and or use more iterations (increase -b)\n\n";
 }
+
+if ($opts{p})
+{
+  # Get random number for temp file suffix
+  my $max = 999999999;
+  my $rand = int(rand($max));
+  my $ext_dist_out = "MM.bootstrapper.$rand.MM";
+  print STDERR "Saving expected distribution to MM.bootstrapper.$rand.MM";
+  open(DISTOUT, ">>$ext_dist_out");
+  foreach my $element (@sorted)
+  {
+    print DISTOUT "$element\n";
+  }
+}
+close(DISTOUT);
+
+
+
 
