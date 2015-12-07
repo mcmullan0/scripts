@@ -70,12 +70,13 @@ if($opts{s})
 {
     print "\nFor All Characters (including those not supposed to be present, see tempfile2.MM\n\n";
 }
-print "\nA/T\n";
+# print bases in order
 system("grep -i 'a' tempfile2.MM; grep -i 't' tempfile2.MM; grep -i 'w' tempfile2.MM");
-print "\n\nC/G\n";
 system("grep -i 'c' tempfile2.MM; grep -i 'g' tempfile2.MM; grep -i 's' tempfile2.MM");
-print "\n\n- or n\n";
 system("grep '-' tempfile2.MM; grep -i 'n' tempfile2.MM; grep -i 'm' tempfile2.MM; grep -i 'r' tempfile2.MM; grep -i 'y' tempfile2.MM; grep -i 'k' tempfile2.MM; grep -i 'v' tempfile2.MM; grep -i 'h' tempfile2.MM; grep -i 'd' tempfile2.MM; grep -i 'b' tempfile2.MM; grep -i 'x' tempfile2.MM");
+print "(N = - or > 3 base ambiguity)\n";
+# Print total and GC ratio
+system("CBP=\$(grep 'C' tempfile2.MM | awk '{print \$2}'); GBP=\$(grep 'G' tempfile2.MM | awk '{print \$2}'); ABP=\$(grep 'A' tempfile2.MM | awk '{print \$2}'); TBP=\$(grep 'T' tempfile2.MM | awk '{print \$2}'); awk -v a=\$ABP -v t=\$TBP -v c=\$CBP -v g=\$GBP 'BEGIN {print \"Total bp:\",a+t+c+g,\"\\n\"\"GC ratio:\",(c+g)/(a+t+c+g)}'");
 system("rm tempfile.MM");
 unless($opts{s})
 {
