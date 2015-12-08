@@ -77,7 +77,8 @@ system("grep '-' tempfile2.MM; grep -i 'n' tempfile2.MM; grep -i 'm' tempfile2.M
 print "(N = - or > 3 base ambiguity)\n";
 # Print total and GC ratio
 system("awk '{sum+=\$2} END {print \"Total bp:\",sum}' tempfile2.MM");
-system("CBP=\$(grep 'C' tempfile2.MM | awk '{print \$2}'); GBP=\$(grep 'G' tempfile2.MM | awk '{print \$2}'); ABP=\$(grep 'A' tempfile2.MM | awk '{print \$2}'); TBP=\$(grep 'T' tempfile2.MM | awk '{print \$2}'); awk -v a=\$ABP -v t=\$TBP -v c=\$CBP -v g=\$GBP 'BEGIN {print \"Total ATCG bp:\",a+t+c+g,\"\\n\"\"GC ratio:\",(c+g)/(a+t+c+g)}'");
+#system("CBP=\$(grep -i 'c' tempfile2.MM | awk '{print \$2}'); GBP=\$(grep -i 'g' tempfile2.MM | awk '{print \$2}'); ABP=\$(grep -i 'a' tempfile2.MM | awk '{print \$2}'); TBP=\$(grep -i 't' tempfile2.MM | awk '{print \$2}'); awk -v a=\$ABP -v t=\$TBP -v c=\$CBP -v g=\$GBP 'BEGIN {print \"Total ATCG bp:\",a+t+c+g,\"\\n\"\"GC ratio:\",(c+g)/(a+t+c+g)}'");
+system("CBP=\$(grep -i 'c' tempfile2.MM | awk '{sum+=\$2} END {print sum}'); GBP=\$(grep -i 'g' tempfile2.MM | awk '{sum+=\$2} END {print sum}'); ABP=\$(grep -i 'a' tempfile2.MM | awk '{sum+=\$2} END {print sum}'); TBP=\$(grep -i 't' tempfile2.MM | awk '{sum+=\$2} END {print sum}'); awk -v a=\$ABP -v t=\$TBP -v c=\$CBP -v g=\$GBP 'BEGIN {print \"Total ATCG bp:\",a+t+c+g,\"\\n\"\"GC ratio:\",(c+g)/(a+t+c+g)}'");
 system("rm tempfile.MM");
 unless($opts{s})
 {
