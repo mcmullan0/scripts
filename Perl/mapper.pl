@@ -112,17 +112,32 @@ if ($opts{d})
 
 for (my $i = 0; $i < $lineno; $i++)
 {
-#
+# LSF submission line
 # mem | samtools -view | -sort | -rmdup | -index | -mpileup | bcftools view for raw .bcf
-# Added -h to samtools view to keep header information 28/05/15
+# Added -h to samtools view to keep header information 28/05/15  Removed -v from bcftools view -bvcg to output all positions PUT BACK (22/10/15).  I have put the -v back (23/10/15
+#  if ($opts{p})
+#  {
+#    print "bsub -q $opts{q} -o $emailout-[$i].lsf -J mapper.pl -n 14 -R \"span[ptile=14]\" \"source samtools-0.1.19; source bwa-0.7.7; bwa mem -t 8 $opts{f} $read1list[$i] $read2list[$i] | samtools view -Shb - | samtools sort - $readolist[$i]-s; samtools rmdup $readolist[$i]-s.bam $readolist[$i]-sr.bam; samtools index $readolist[$i]-sr.bam; rm $readolist[$i]-s.bam; samtools mpileup -uDgf $opts{f} $readolist[$i]-sr.bam | bcftools view -bvcg - > $readolist[$i]-sr.raw.bcf\"\n";
+#  }
+# else
+#  {
+#    system("bsub -q $opts{q} $emailout-[$i].lsf -J mapper.pl -n 14 -R \"span[ptile=14]\" \"source samtools-0.1.19; source bwa-0.7.7; bwa mem -t 8 $opts{f} $read1list[$i] $read2list[$i] | samtools view -Shb - | samtools sort - $readolist[$i]-s; samtools rmdup $readolist[$i]-s.bam $readolist[$i]-sr.bam; samtools index $readolist[$i]-sr.bam; rm $readolist[$i]-s.bam; samtools mpileup -uDgf $opts{f} $readolist[$i]-sr.bam | bcftools view -bvcg - > $readolist[$i]-sr.raw.bcf\"");
+#  }
+#
+#
+#
+# SLURM submission line§
   if ($opts{p})
   {
-    print "bsub -q $opts{q} -o $emailout-[$i].lsf -J mapper.pl -n 14 -R \"span[ptile=14]\" \"source samtools-0.1.19; source bwa-0.7.7; bwa mem -t 8 $opts{f} $read1list[$i] $read2list[$i] | samtools view -Shb - | samtools sort - $readolist[$i]-s; samtools rmdup $readolist[$i]-s.bam $readolist[$i]-sr.bam; samtools index $readolist[$i]-sr.bam; rm $readolist[$i]-s.bam; samtools mpileup -uDgf $opts{f} $readolist[$i]-sr.bam | bcftools view -bvcg - > $readolist[$i]-sr.raw.bcf\"\n";
+    print "submit-slurm.pl -j mapper.pl-$i -q $opts{q} -n 16 -m 32786 -t 1-00:00 -e -i \"source samtools-0.1.19; source bwa-0.7.7; srun bwa mem -t 16 $opts{f} $read1list[$i] $read2list[$i] | samtools view -Shb - | samtools sort - $readolist[$i]-s; srun samtools rmdup $readolist[$i]-s.bam $readolist[$i]-sr.bam; srun samtools index $readolist[$i]-sr.bam; rm $readolist[$i]-s.bam; srun samtools mpileup -uDgf $opts{f} $readolist[$i]-sr.bam | bcftools view -bvcg - > $readolist[$i]-sr.raw.bcf\"\n";
   }
  else
   {
-    system("bsub -q $opts{q} $emailout-[$i].lsf -J mapper.pl -n 14 -R \"span[ptile=14]\" \"source samtools-0.1.19; source bwa-0.7.7; bwa mem -t 8 $opts{f} $read1list[$i] $read2list[$i] | samtools view -Shb - | samtools sort - $readolist[$i]-s; samtools rmdup $readolist[$i]-s.bam $readolist[$i]-sr.bam; samtools index $readolist[$i]-sr.bam; rm $readolist[$i]-s.bam; samtools mpileup -uDgf $opts{f} $readolist[$i]-sr.bam | bcftools view -bvcg - > $readolist[$i]-sr.raw.bcf\"");
+    system("submit-slurm.pl -j mapper.pl-$i -q $opts{q} -n 16 -m 32786 -t 1-00:00 -e -i \"source samtools-0.1.19; source bwa-0.7.7; srun bwa mem -t 16 $opts{f} $read1list[$i] $read2list[$i] | samtools view -Shb - | samtools sort - $readolist[$i]-s; srun samtools rmdup $readolist[$i]-s.bam $readolist[$i]-sr.bam; srun samtools index $readolist[$i]-sr.bam; rm $readolist[$i]-s.bam; srun samtools mpileup -uDgf $opts{f} $readolist[$i]-sr.bam | bcftools view -bvcg - > $readolist[$i]-sr.raw.bcf\"");
   }
+
+
+
 #
 # mem | samtools -view | -sort | -rmdup | -index > save .bams for multisample vcf [27/05/15] got an EOF absent messege...
 #  if ($opts{p})
