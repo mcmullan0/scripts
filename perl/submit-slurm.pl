@@ -5,7 +5,7 @@ use Getopt::Std;
 
 # Write a slurm script for given input (see help = run with no flags)
 my %opts;
-getopts('q:N:n:c:t:j:i:m:er', \%opts);
+getopts('q:N:n:c:t:j:i:m:d:er', \%opts);
 my $status = '--mail-type=END,FAIL';
 my $email = '--mail-user=mark.mcmullan@tgac.ac.uk';
 my $datestring = localtime();
@@ -122,6 +122,7 @@ if ($opts{e})
 }
 print SLURMFILE "\n$opts{i}\n";
 close(SLURMFILE);
+
 # Here we then run SLURMFILE and later 
 system("sbatch MM-$opts{j}.slurm-MM");
 

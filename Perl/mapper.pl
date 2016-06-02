@@ -7,28 +7,29 @@ use warnings;
 # provide -q the cluster queue, the -f reference fasta, a file of -l R1 and a file of -r R2 reads, -o a file of a list of outfile names
 # print a test bsub line instead of submtting to the cluster -p.  Use with '> filename' to check if your files match up
 
+# This script has been pulled in every direction and now with the move to slurm should be written from scratch
 use Getopt::Std;
 
 
 my %opts;
 # accept input directory -d (argument)
-getopts('q:f:l:r:b:e:s:n:i:d:o:p', \%opts);
+getopts('q:f:l:r:b:j:s:n:i:d:o:p', \%opts);
 
 # Collect all the flag data or end
-unless ($opts{q} && $opts{l})
+unless ($opts{q} && $opts{l} && $opts{j})
 {
-  print "\nHelp:\nRuns a pipeline taking three lists of files (in1, in2 and out prefix).  Select pipeline by commenting out.";
+  print "\nHelp:\nPOST slurm iteration.  For LSF roll back to pre 02/06/16\nRuns a pipeline taking three lists of files (in1, in2 and out prefix).  Select pipeline by commenting out.";
   print "\nThe first step (prior to this) is to index your reference file -bwa index fasta.fas\nAlso, source bwa-0.7.7; samtools-0.1.19\n";
   print "\nthis script will run:";
-  print "\nbwa-mem (map) | samtools view (sam>bam) | samtools rmdup (remove duplicates) | sort | index\n or";
-  print "\nbwa aln | bwa sampe | samtools view | samtools | rmdup | sort | index\n or";
-  print "\nPull out R1 reads from a .bam and get depth - view -b -h -f 0x0040 allreads.bam > read1s.bam | depth\n or";
-  print "\ntrim fq reads using sickle";
-  print "\ninput:\n -q <cluster queue>\n -e <jobname> save lsf out to file instead of emailing\n -f <reference.fasta> (bwa index; samtools faidx before running this script)";
+  print "\nbwa-mem (map) | samtools view (sam>bam) | samtools rmdup (remove duplicates) | sort | index\n";
+#  print "\nbwa aln | bwa sampe | samtools view | samtools | rmdup | sort | index\n or";
+#  print "\nPull out R1 reads from a .bam and get depth - view -b -h -f 0x0040 allreads.bam > read1s.bam | depth\n or";
+#  print "\ntrim fq reads using sickle";
+  print "\ninput:\n -q <cluster queue>\n -j <jobname>\n -f <reference.fasta> (bwa index; samtools faidx before running this script)";
   print "\nA file of containing a list of filenames for";
   print "\n   -l <R1 reads>\n   -r <R2 reads>\n   -b <out-prefix>";
-  print "\n If you run sickle:\n   -s <base score>, trim bases < score\n   -n minimum length read";
-  print "\n If you run TopHat:\n   -i <insert.size.file.list>\n   -d stdev.insert.file.list\n   -o <ouput.dir>";
+#  print "\n If you run sickle:\n   -s <base score>, trim bases < score\n   -n minimum length read";
+#  print "\n If you run TopHat:\n   -i <insert.size.file.list>\n   -d stdev.insert.file.list\n   -o <ouput.dir>";
   print "\n -p print test lines instead of submtting to the cluster.  Use with > filename\n\n";
   exit;
 }
@@ -37,19 +38,22 @@ unless ($opts{f})
   print "\nEnter -f a reference fasta prefix\n\n";
   exit;
 }
-my $emailout = "$opts{e}";
-my $bsubemailout = "$opts{e}/";
-unless ($opts{p})
-{
-  if ($opts{e})
-  {
-    unless(mkdir $opts{e})
-    {
-      die "Unable to create $opts{e}\n$!";
-    }
-    $emailout = "-o $opts{e}/$opts{e}";
-  }
-}
+
+
+# This is pre slurm when opts e was to recieve emails
+#my $emailout = "$opts{e}";
+#my $bsubemailout = "$opts{e}/";
+#unless ($opts{p})
+#{
+#  if ($opts{e})
+#  {
+#    unless(mkdir $opts{e})
+#    {
+#      die "Unable to create $opts{e}\n$!";
+#    }
+#    $emailout = "-o $opts{e}/$opts{e}";
+#  }
+#}
 
 # Open read files and outfiles containing the names of the files and load them into arrays
 my $lineno = 0;           # A line counter for the for loop below
@@ -85,30 +89,31 @@ if ($opts{b})
   }
   close INFILE;
 }
-  
-my @meaninsert = ();
-if ($opts{i})
-{
-  open(INFILE, $opts{i});
-  foreach my $line (<INFILE>)
-  {
-    chomp $line;
-    push(@meaninsert, "$line");
-  }
-  close INFILE;
-}
 
-my @stdvinsert = ();
-if ($opts{d})
-{
-  open(INFILE, $opts{d});
-  foreach my $line (<INFILE>)
-  {
-    chomp $line;
-    push(@stdvinsert, "$line");
-  }
-  close INFILE;
-}
+# This was for sickle (use seperate script in future)  
+#my @meaninsert = ();
+#if ($opts{i})
+#{
+#  open(INFILE, $opts{i});
+#  foreach my $line (<INFILE>)
+#  {
+#    chomp $line;
+#    push(@meaninsert, "$line");
+#  }
+#  close INFILE;
+#}
+# This was for sickle (use seperate script in future)
+#my @stdvinsert = ();
+#if ($opts{d})
+#{
+#  open(INFILE, $opts{d});
+#  foreach my $line (<INFILE>)
+#  {
+#    chomp $line;
+#    push(@stdvinsert, "$line");
+#  }
+#  close INFILE;
+#}
 
 for (my $i = 0; $i < $lineno; $i++)
 {
@@ -129,15 +134,12 @@ for (my $i = 0; $i < $lineno; $i++)
 # SLURM submission line§
   if ($opts{p})
   {
-    print "submit-slurm.pl -j mapper.pl-$i -q $opts{q} -n 16 -m 32786 -t 1-00:00 -e -i \"source samtools-0.1.19; source bwa-0.7.7; srun bwa mem -t 16 $opts{f} $read1list[$i] $read2list[$i] | samtools view -Shb - | samtools sort - $readolist[$i]-s; srun samtools rmdup $readolist[$i]-s.bam $readolist[$i]-sr.bam; srun samtools index $readolist[$i]-sr.bam; rm $readolist[$i]-s.bam; srun samtools mpileup -uDgf $opts{f} $readolist[$i]-sr.bam | bcftools view -bvcg - > $readolist[$i]-sr.raw.bcf\"\n";
+    print "submit-slurm.pl -j mapper.pl-$readolist[$i] -q $opts{q} -c 16 -m 16384 -t 1-00:00 -e -i \"source samtools-0.1.19; source bwa-0.7.7; srun bwa mem -t 16 $opts{f} $read1list[$i] $read2list[$i] | samtools view -Shb - | samtools sort - $readolist[$i]-s; srun samtools rmdup $readolist[$i]-s.bam $readolist[$i]-sr.bam; srun samtools index $readolist[$i]-sr.bam; rm $readolist[$i]-s.bam; srun samtools mpileup -uDgf $opts{f} $readolist[$i]-sr.bam | bcftools view -bvcg - > $readolist[$i]-sr.raw.bcf\"\n";
   }
  else
   {
-    system("submit-slurm.pl -j mapper.pl-$i -q $opts{q} -n 16 -m 32786 -t 1-00:00 -e -i \"source samtools-0.1.19; source bwa-0.7.7; srun bwa mem -t 16 $opts{f} $read1list[$i] $read2list[$i] | samtools view -Shb - | samtools sort - $readolist[$i]-s; srun samtools rmdup $readolist[$i]-s.bam $readolist[$i]-sr.bam; srun samtools index $readolist[$i]-sr.bam; rm $readolist[$i]-s.bam; srun samtools mpileup -uDgf $opts{f} $readolist[$i]-sr.bam | bcftools view -bvcg - > $readolist[$i]-sr.raw.bcf\"");
+    system("submit-slurm.pl -j mapper.pl-$readolist[$i] -q $opts{q} -c 16 -m 16384 -t 1-00:00 -e -i \"source samtools-0.1.19; source bwa-0.7.7; srun bwa mem -t 16 $opts{f} $read1list[$i] $read2list[$i] | samtools view -Shb - | samtools sort - $readolist[$i]-s; srun samtools rmdup $readolist[$i]-s.bam $readolist[$i]-sr.bam; srun samtools index $readolist[$i]-sr.bam; rm $readolist[$i]-s.bam; srun samtools mpileup -uDgf $opts{f} $readolist[$i]-sr.bam | bcftools view -bvcg - > $readolist[$i]-sr.raw.bcf\"");
   }
-
-
-
 #
 # mem | samtools -view | -sort | -rmdup | -index > save .bams for multisample vcf [27/05/15] got an EOF absent messege...
 #  if ($opts{p})
