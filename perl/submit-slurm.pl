@@ -5,7 +5,7 @@ use Getopt::Std;
 
 # Write a slurm script for given input (see help = run with no flags)
 my %opts;
-getopts('q:N:n:t:j:i:m:er', \%opts);
+getopts('q:N:n:c:t:j:i:m:er', \%opts);
 my $status = '--mail-type=END,FAIL';
 my $email = '--mail-user=mark.mcmullan@tgac.ac.uk';
 my $datestring = localtime();
@@ -18,7 +18,8 @@ unless ($opts{i})
   print STDOUT "         -i \"command line\" (REQUIRED)\n";
   print STDOUT "         -q queue (default = tgac-short (-6h); OR: tgac-medium (-2d), tgac-long)\n";
   print STDOUT "         -N nodes (default = 1)\n";
-  print STDOUT "         -n threads (default = 4)\n";
+  print STDOUT "         -n tasks (default = 1)\n";
+  print STDOUT "         -c cores/threads (default = 4)\n";
   print STDOUT "         -m memory (in mb; default = 4096)\n";
   print STDOUT "         -t time (default = 0-0:20 (20 mins); -t no longer than queue)\n";
   print STDOUT "         -e (if you want it to email you on complete.  Default = n)\n";
@@ -43,7 +44,11 @@ unless ($opts{N})
 }
 unless ($opts{n})
 {
-  $opts{n}=4;
+  $opts{n}=1;
+}
+unless ($opts{c})
+{
+  $opts{c}=4;
 }
 unless ($opts{t})
 {
@@ -62,6 +67,7 @@ print OUTFILE "#!/bin/bash\n";
 print OUTFILE "#SBATCH -p $opts{q} # partition (queue)\n";
 print OUTFILE "#SBATCH -N $opts{N} # number of nodes\n";
 print OUTFILE "#SBATCH -n $opts{n} # number of tasks\n";
+print OUTFILE "#SBATCH -c $opts{c} # number of cores\n";
 print OUTFILE "#SBATCH --mem $opts{m} # memory pool for all cores\n";
 print OUTFILE "#SBATCH -t $opts{t} # time (D-HH:MM)\n";
 print OUTFILE "#SBATCH -o $opts{j}.out.slurm # STDOUT\n";
@@ -82,6 +88,7 @@ print ERRFILE "#!/bin/bash\n";
 print ERRFILE "#SBATCH -p $opts{q} # partition (queue)\n";
 print ERRFILE "#SBATCH -N $opts{N} # number of nodes\n";
 print ERRFILE "#SBATCH -n $opts{n} # number of tasks\n";
+print ERRFILE "#SBATCH -c $opts{c} # number of cores\n";
 print ERRFILE "#SBATCH --mem $opts{m} # memory pool for all cores\n";
 print ERRFILE "#SBATCH -t $opts{t} # time (D-HH:MM)\n";
 print ERRFILE "#SBATCH -o $opts{j}.out.slurm # STDOUT\n";
@@ -102,6 +109,7 @@ print SLURMFILE "#!/bin/bash\n";
 print SLURMFILE "#SBATCH -p $opts{q} # partition (queue)\n";
 print SLURMFILE "#SBATCH -N $opts{N} # number of nodes\n";
 print SLURMFILE "#SBATCH -n $opts{n} # number of tasks\n";
+print SLURMFILE "#SBATCH -c $opts{c} # number of cores\n";
 print SLURMFILE "#SBATCH --mem $opts{m} # memory pool for all cores\n";
 print SLURMFILE "#SBATCH -t $opts{t} # time (D-HH:MM)\n";
 print SLURMFILE "#SBATCH -o $opts{j}.out.slurm # STDOUT\n";
