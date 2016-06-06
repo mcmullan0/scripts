@@ -63,7 +63,7 @@ unless ($opts{m})
 # .out.slurm
 open(OUTFILE, ">>$opts{j}.out.slurm");
 print OUTFILE "$hashes\n$datestring\n$hashes\n";
-print OUTFILE "#!/bin/bash\n";
+print OUTFILE "#!/bin/bash -e\n";
 print OUTFILE "#SBATCH -p $opts{q} # partition (queue)\n";
 print OUTFILE "#SBATCH -N $opts{N} # number of nodes\n";
 print OUTFILE "#SBATCH -n $opts{n} # number of tasks\n";
@@ -84,7 +84,7 @@ close(OUTFILE);
 # .err.slurm
 open(ERRFILE, ">>$opts{j}.err.slurm");
 print ERRFILE "$hashes\n$datestring\n$hashes\n";
-print ERRFILE "#!/bin/bash\n";
+print ERRFILE "#!/bin/bash -e\n";
 print ERRFILE "#SBATCH -p $opts{q} # partition (queue)\n";
 print ERRFILE "#SBATCH -N $opts{N} # number of nodes\n";
 print ERRFILE "#SBATCH -n $opts{n} # number of tasks\n";
@@ -105,7 +105,7 @@ close(ERRFILE);
 
 # Make my submision file for SLURM
 open(SLURMFILE, ">MM-$opts{j}.slurm-MM");
-print SLURMFILE "#!/bin/bash\n";
+print SLURMFILE "#!/bin/bash -e\n";
 print SLURMFILE "#SBATCH -p $opts{q} # partition (queue)\n";
 print SLURMFILE "#SBATCH -N $opts{N} # number of nodes\n";
 print SLURMFILE "#SBATCH -n $opts{n} # number of tasks\n";
