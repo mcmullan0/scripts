@@ -23,7 +23,7 @@ unless ($opts{i})
   print STDOUT "         -m memory (in mb; default = 4096)\n";
   print STDOUT "         -t time (default = 0-0:20 (20 mins); -t no longer than queue)\n";
   print STDOUT "         -e (if you want it to email you on complete.  Default = n)\n";
-  print STDOUT "         -r Do not remove the run file\n";
+  print STDOUT "         -r Do not remove the run file (default = rm MM-runfile-MM)\n";
   print STDOUT "Appends this run info to your .out and .err files (before slurm); --open-mode=append\n";
   print STDOUT "Then writes the slrum file and runs\n";
   exit;
@@ -123,7 +123,7 @@ if ($opts{e})
 print SLURMFILE "\n$opts{i}\n";
 close(SLURMFILE);
 
-# Here we then run SLURMFILE and later 
+# Here we then run SLURMFILE 
 system("sbatch MM-$opts{j}.slurm-MM");
 
 # Collect job id then if failed -send me an email
@@ -138,7 +138,7 @@ system("sbatch MM-$opts{j}.slurm-MM");
 # afterok:job_id[:jobid...]
 # This job can begin execution after the specified jobs have successfully executed (ran to completion with an exit code of zero).
 #
-#unless ($opts{r})
-#{
-#  system("sleep 1; rm sbatch MM-$opts{j}.slurm-MM")
-#}
+unless ($opts{r})
+{
+  system("sleep 1; rm MM-$opts{j}.slurm-MM")
+}
