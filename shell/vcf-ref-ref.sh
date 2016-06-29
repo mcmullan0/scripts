@@ -118,7 +118,7 @@ fi
 grep -v '#' $INFILE | awk -v OFS='	' '{print $1,$2}' > MM.temp-pos_${RAND}.MM
 awk '{sum=0; for (i=1; i<=NF; i++) { sum+= $i } print sum}' MM.temp-replace_${RAND}.MM >> MM.temp-sum_${RAND}.MM
 paste MM.temp-pos_${RAND}.MM MM.temp-replace_${RAND}.MM MM.temp-sum_${RAND}.MM > MM.pos-replace-sum_${RAND}.MM; rm MM.temp-pos_${RAND}.MM MM.temp-replace_${RAND}.MM MM.temp-sum_${RAND}.MM
-awk '$6==0' MM.pos-replace-sum_${RAND}.MM | awk -v OFS='   ' '{print $1,$2}' > MM.pos-refref_${RAND}.MM
+awk '$NF==0' MM.pos-replace-sum_${RAND}.MM | awk -v OFS='   ' '{print $1,$2}' > MM.pos-refref_${RAND}.MM
 
 # Run vcftools
 
@@ -128,4 +128,4 @@ vcftools --vcf $INFILE --exclude-positions MM.pos-refref_${RAND}.MM --recode --o
 vcftools --vcf ${OUTFILE}.no-refref.recode.vcf --max-missing $MAXMIS --recode --out ${OUTFILE}.no-refref.no-missing
  
 # Clean up
-rm MM.temp-nomis-3_${RAND}.MM MM.pos-replace-sum_${RAND}.MM MM.pos-refref_${RAND}.MM ${OUTFILE}.no-refref.recode.vcf ${OUTFILE}.no-refref.log ${OUTFILE}.no-refref.no-missing.log
+# rm MM.temp-nomis-3_${RAND}.MM MM.pos-replace-sum_${RAND}.MM MM.pos-refref_${RAND}.MM ${OUTFILE}.no-refref.recode.vcf ${OUTFILE}.no-refref.log ${OUTFILE}.no-refref.no-missing.log
