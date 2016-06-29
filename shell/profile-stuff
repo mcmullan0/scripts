@@ -1,0 +1,19 @@
+#Created by MM on 29/01/15
+
+# Make my ls's look colourful
+export PS1="\[\033[36m\]\u\[\033[m\]@\[\033[32m\]\h:\[\033[33;1m\]\w\[\033[m\]\$ "
+export CLICOLOR=1
+export LSCOLORS=ExFxBxDxCxegedabagacad
+alias ls='ls -GFh'
+
+# Alias
+alias les="less -S"
+alias ll="ls -lthr"
+
+# Control history
+export HISTCONTROL=ignorespace
+export PS1="\t $PS1"
+
+# User specific aliases and functions
+# Time to prompt
+export PS1="\t $PS1"
