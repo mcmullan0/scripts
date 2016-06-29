@@ -6,8 +6,7 @@
 
 # Provide -i infile and state whether it is -h, -d OR -p for haploid, dipolid (unphased 0/1) OR diploid (phased 0|1)
 
-#i:h::d::p::
-
+RAND=$((1 + RANDOM % 999999))
 
 while getopts "i:hdp" opt
 do
@@ -57,7 +56,7 @@ if [ -z ${INFILE+x} ]
 then
   echo -ne "\n\n########################################################### vcf-ref-ref.sh ######################################################\n"
   echo -ne "# A script that first counts the number of columns in a vcf (=No. ind) (assumes ind start at $10)                                 #\n"
-  echo -ne "# It then produces a file that lists all positions where all indivdiuals are ref/ref calls (0/0), 0|0 or 0|) = MM.pos-refref.MM #\n"
+  echo -ne "# It then produces a file that lists all positions where all indivdiuals are ref/ref calls (0/0), 0|0 or 0|) = MM.pos-refref_${RAND}.MM #\n"
   echo -ne "# It then runs max-missing to retain only those sites with at least 1 call for an individual (=[1/No. ind] / 2)                 #\n"
   echo -ne "#################################################################################################################################\n\n"
   exit 1
@@ -72,54 +71,60 @@ echo -e "\nThere are $INDNO individuals in your vcf\n"
 MAXMIS=$(awk -v a=$INDNO 'BEGIN { print (1 / a) / 2 }')
 echo "max-missing = $MAXMIS"
 
-echo "" > MM.temp-nomis-1.MM
-echo "" > MM.temp-nomis-2.MM
-echo "" > MM.temp-nomis-3.MM
-for IND in $(seq 10 $TOTALNO); do grep -v '#' $INFILE | awk -v COLUMN=$IND '{print $COLUMN}' | cut -d ':' -f 1 > MM.temp-nomis-1.MM; paste MM.temp-nomis-2.MM MM.temp-nomis-1.MM > MM.temp-nomis-3.MM; cp MM.temp-nomis-3.MM MM.temp-nomis-2.MM; done
+echo "" > MM.temp-nomis-1_${RAND}.MM
+echo "" > MM.temp-nomis-2_${RAND}.MM
+echo "" > MM.temp-nomis-3_${RAND}.MM
+for IND in $(seq 10 $TOTALNO)
+do
+  grep -v '#' $INFILE | awk -v COLUMN=$IND '{print $COLUMN}' | cut -d ':' -f 1 > MM.temp-nomis-1_${RAND}.MM
+  paste MM.temp-nomis-2_${RAND}.MM MM.temp-nomis-1_${RAND}.MM > MM.temp-nomis-3_${RAND}.MM
+  cp MM.temp-nomis-3_${RAND}.MM MM.temp-nomis-2_${RAND}.MM
+done
 
-rm MM.temp-nomis-2.MM MM.temp-nomis-1.MM
+rm MM.temp-nomis-2_${RAND}.MM MM.temp-nomis-1_${RAND}.MM
 
 # Replace genotypes for numbers
 # if haploid
-#if [ "$GENTYP" == '0|' ]
-#then 
-  sed "s/$GENTYP/0/g" MM.temp-nomis-3.MM > MM.temp-replace.MM
-  sed "s/$ELSE1/1/g" MM.temp-replace.MM > MM.temp-replace2.MM; mv MM.temp-replace2.MM MM.temp-replace.MM
-  sed "s/$ELSE2/1/g" MM.temp-replace.MM > MM.temp-replace2.MM; mv MM.temp-replace2.MM MM.temp-replace.MM
-#fi
+if [ "$GENTYP" == '0|' ]
+then 
+  sed "s/$GENTYP/0/g" MM.temp-nomis-3_${RAND}.MM > MM.temp-replace_${RAND}.MM
+  sed "s/$ELSE1/1/g" MM.temp-replace_${RAND}.MM > MM.temp-replace2_${RAND}.MM; mv MM.temp-replace2_${RAND}.MM MM.temp-replace_${RAND}.MM
+  sed "s/$ELSE2/1/g" MM.temp-replace_${RAND}.MM > MM.temp-replace2_${RAND}.MM; mv MM.temp-replace2_${RAND}.MM MM.temp-replace_${RAND}.MM
+fi
 # if diploid
 if [ "$GENTYP" == '0/0' ]
 then
-  sed "s/$GENTYP/0/g" MM.temp-nomis-3.MM > MM.temp-replace.MM
-  sed "s/$ELSE1/1/g" MM.temp-replace.MM > MM.temp-replace2.MM; mv MM.temp-replace2.MM MM.temp-replace.MM
-  sed "s/$ELSE2/1/g" MM.temp-replace.MM > MM.temp-replace2.MM; mv MM.temp-replace2.MM MM.temp-replace.MM
-  sed "s/$ELSE3/1/g" MM.temp-replace.MM > MM.temp-replace2.MM; mv MM.temp-replace2.MM MM.temp-replace.MM
+  sed "s/$GENTYP/0/g" MM.temp-nomis-3_${RAND}.MM > MM.temp-replace_${RAND}.MM
+  sed "s/$ELSE1/1/g" MM.temp-replace_${RAND}.MM > MM.temp-replace2_${RAND}.MM; mv MM.temp-replace2_${RAND}.MM MM.temp-replace_${RAND}.MM
+  sed "s/$ELSE2/1/g" MM.temp-replace_${RAND}.MM > MM.temp-replace2_${RAND}.MM; mv MM.temp-replace2_${RAND}.MM MM.temp-replace_${RAND}.MM
+  sed "s/$ELSE3/1/g" MM.temp-replace_${RAND}.MM > MM.temp-replace2_${RAND}.MM; mv MM.temp-replace2_${RAND}.MM MM.temp-replace_${RAND}.MM
 fi
 # if phased diploid
 if [ "$GENTYP" == '0|0' ]
 then
-  sed "s/$GENTYP/0/g" MM.temp-nomis-3.MM > MM.temp-replace.MM
-  sed "s/$ELSE1/1/g" MM.temp-replace.MM > MM.temp-replace2.MM; mv MM.temp-replace2.MM MM.temp-replace.MM
-  sed "s/$ELSE2/1/g" MM.temp-replace.MM > MM.temp-replace2.MM; mv MM.temp-replace2.MM MM.temp-replace.MM
-  sed "s/$ELSE3/1/g" MM.temp-replace.MM > MM.temp-replace2.MM; mv MM.temp-replace2.MM MM.temp-replace.MM
-  sed "s/$ELSE4/1/g" MM.temp-replace.MM > MM.temp-replace2.MM; mv MM.temp-replace2.MM MM.temp-replace.MM
-  sed "s/$ELSE5/1/g" MM.temp-replace.MM > MM.temp-replace2.MM; mv MM.temp-replace2.MM MM.temp-replace.MM
-  sed "s/$ELSE6/1/g" MM.temp-replace.MM > MM.temp-replace2.MM; mv MM.temp-replace2.MM MM.temp-replace.MM
-  sed "s/$ELSE7/1/g" MM.temp-replace.MM > MM.temp-replace2.MM; mv MM.temp-replace2.MM MM.temp-replace.MM
+  sed "s/$GENTYP/0/g" MM.temp-nomis-3_${RAND}.MM > MM.temp-replace_${RAND}.MM
+  sed "s/$ELSE1/1/g" MM.temp-replace_${RAND}.MM > MM.temp-replace2_${RAND}.MM; mv MM.temp-replace2_${RAND}.MM MM.temp-replace_${RAND}.MM
+  sed "s/$ELSE2/1/g" MM.temp-replace_${RAND}.MM > MM.temp-replace2_${RAND}.MM; mv MM.temp-replace2_${RAND}.MM MM.temp-replace_${RAND}.MM
+  sed "s/$ELSE3/1/g" MM.temp-replace_${RAND}.MM > MM.temp-replace2_${RAND}.MM; mv MM.temp-replace2_${RAND}.MM MM.temp-replace_${RAND}.MM
+  sed "s/$ELSE4/1/g" MM.temp-replace_${RAND}.MM > MM.temp-replace2_${RAND}.MM; mv MM.temp-replace2_${RAND}.MM MM.temp-replace_${RAND}.MM
+  sed "s/$ELSE5/1/g" MM.temp-replace_${RAND}.MM > MM.temp-replace2_${RAND}.MM; mv MM.temp-replace2_${RAND}.MM MM.temp-replace_${RAND}.MM
+  sed "s/$ELSE6/1/g" MM.temp-replace_${RAND}.MM > MM.temp-replace2_${RAND}.MM; mv MM.temp-replace2_${RAND}.MM MM.temp-replace_${RAND}.MM
+  sed "s/$ELSE7/1/g" MM.temp-replace_${RAND}.MM > MM.temp-replace2_${RAND}.MM; mv MM.temp-replace2_${RAND}.MM MM.temp-replace_${RAND}.MM
 fi
 
 # get all the chrom bp positions from the vcf
 # sum each row to identify rows of ref-ref sites (=0)
-grep -v '#' $INFILE | awk -v OFS='	' '{print $1,$2}' > MM.temp-pos.MM
-awk '{sum=0; for (i=1; i<=NF; i++) { sum+= $i } print sum}' MM.temp-replace.MM >> MM.temp-sum.MM
-paste MM.temp-pos.MM MM.temp-replace.MM MM.temp-sum.MM > MM.pos-replace-sum.MM; rm MM.temp-pos.MM MM.temp-replace.MM MM.temp-sum.MM
-awk '$6==0' MM.pos-replace-sum.MM | awk -v OFS='   ' '{print $1,$2}' > MM.pos-refref.MM
+grep -v '#' $INFILE | awk -v OFS='	' '{print $1,$2}' > MM.temp-pos_${RAND}.MM
+awk '{sum=0; for (i=1; i<=NF; i++) { sum+= $i } print sum}' MM.temp-replace_${RAND}.MM >> MM.temp-sum_${RAND}.MM
+paste MM.temp-pos_${RAND}.MM MM.temp-replace_${RAND}.MM MM.temp-sum_${RAND}.MM > MM.pos-replace-sum_${RAND}.MM; rm MM.temp-pos_${RAND}.MM MM.temp-replace_${RAND}.MM MM.temp-sum_${RAND}.MM
+awk '$6==0' MM.pos-replace-sum_${RAND}.MM | awk -v OFS='   ' '{print $1,$2}' > MM.pos-refref_${RAND}.MM
 
 # Run vcftools
 
 OUTFILE=$(echo $INFILE | sed 's/.vcf//')
 source vcftools-0.1.13
-vcftools --vcf $INFILE --exclude-positions MM.pos-refref.MM --recode --out ${OUTFILE}.no-refref 
-vcftools --vcf ${OUTFILE}.no-refref.recode.vcf --max-missing $MAXMIS --recode --out ${OUTFILE}.no-rEFref.no-missing
+vcftools --vcf $INFILE --exclude-positions MM.pos-refref_${RAND}.MM --recode --out ${OUTFILE}.no-refref 
+vcftools --vcf ${OUTFILE}.no-refref.recode.vcf --max-missing $MAXMIS --recode --out ${OUTFILE}.no-refref.no-missing
  
-
+# Clean up
+rm MM.temp-nomis-3_${RAND}.MM MM.pos-replace-sum_${RAND}.MM MM.pos-refref_${RAND}.MM ${OUTFILE}.no-refref.recode.vcf ${OUTFILE}.no-refref.log ${OUTFILE}.no-refref.no-missing.log
