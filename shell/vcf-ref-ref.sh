@@ -17,8 +17,8 @@ do
       ls $INFILE
       ;;
     h)
-      GENTYP='0|'
-      ELSE1='1|'
+      GENTYP='0'
+      ELSE1='1'
       ELSE2='\.'
       echo -en "You say this is haploid data ($GENTYP)\n"
       ;;
@@ -86,7 +86,7 @@ rm MM.temp-nomis-2_${RAND}.MM MM.temp-nomis-1_${RAND}.MM
 
 # Replace genotypes for numbers
 # if haploid
-if [ "$GENTYP" == '0|' ]
+if [ "$GENTYP" == '0' ]
 then 
   sed "s/$GENTYP/0/g" MM.temp-nomis-3_${RAND}.MM > MM.temp-replace_${RAND}.MM
   sed "s/$ELSE1/1/g" MM.temp-replace_${RAND}.MM > MM.temp-replace2_${RAND}.MM; mv MM.temp-replace2_${RAND}.MM MM.temp-replace_${RAND}.MM
@@ -128,4 +128,4 @@ vcftools --vcf $INFILE --exclude-positions MM.pos-refref_${RAND}.MM --recode --o
 vcftools --vcf ${OUTFILE}.no-refref.recode.vcf --max-missing $MAXMIS --recode --out ${OUTFILE}.no-refref.no-missing
  
 # Clean up
-rm MM.temp-nomis-3_${RAND}.MM MM.pos-replace-sum_${RAND}.MM MM.pos-refref_${RAND}.MM ${OUTFILE}.no-refref.recode.vcf ${OUTFILE}.no-refref.log ${OUTFILE}.no-refref.no-missing.log
+rm MM.temp-nomis-3_${RAND}.MM MM.pos-replace-sum_${RAND}.MM MM.pos-refref_${RAND}.MM ${OUTFILE}.no-refref.recode.vcf
