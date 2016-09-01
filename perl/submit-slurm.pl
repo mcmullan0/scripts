@@ -16,7 +16,7 @@ unless ($opts{i})
   print STDOUT "\nWrite a slurm script for given input\n";
   print STDOUT "profile  -j jobID (default = bash)\n";
   print STDOUT "         -i \"command line\" (REQUIRED)\n";
-  print STDOUT "         -q queue (default = tgac-short (-6h); OR: tgac-medium (-2d), tgac-long)\n";
+  print STDOUT "         -q queue (default = tgac-short (-6h); OR: tgac-medium (-6d), tgac-long)\n";
   print STDOUT "         -N nodes (default = 1)\n";
   print STDOUT "         -n tasks (default = 1)\n";
   print STDOUT "         -c cores/threads (default = 4)\n";
@@ -140,5 +140,5 @@ system("sbatch MM-$opts{j}.slurm-MM");
 #
 unless ($opts{r})
 {
-  system("sleep 1; rm MM-$opts{j}.slurm-MM")
+  system("rm MM-$opts{j}.slurm-MM")
 }
