@@ -68,7 +68,7 @@ fi
 
 if [ -z ${RUNBOOT+x} ]
 then
-  echo -e "\n\nUse -B to run a bootstrap\n"
+  RUNBOOTpointless=0 # I set this just to set somthing as the if statment asks of RUNBOOT is empty and so I needed to do something in this case
 else
   for (( iterator=0; iterator<$BOOT; iterator++ ))
   do
