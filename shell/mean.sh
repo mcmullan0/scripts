@@ -42,7 +42,7 @@ then
   exit 1
 fi
 
-RAND=$((1 + RANDOM % 999999))
+RAND=$((1 + RANDOM % 9999999999))
 
 
 tee MM.mean-data.$RAND.MM | awk -v c=$COLUMN '{sum+=$c; sumsq+=$c*$c} END {print "Mean =",sum/NR; print "StDv =",sqrt(sumsq/NR - (sum/NR)**2); print "SEM =", (sqrt(sumsq/NR - (sum/NR)**2))/sqrt(NR)}'
@@ -72,12 +72,20 @@ then
 else
   for (( iterator=0; iterator<$BOOT; iterator++ ))
   do
-    awk -v c=$COLUMN '{print $c}' MM.mean-data.$RAND.MM | shuf -rn $SAMP | awk '{sum+=$1; sumsq+=$1*$1} END {print sum/NR}'
+    awk -v c=$COLUMN '{print $c}' MM.mean-data.$RAND.MM | gshuf -rn $SAMP | awk '{sum+=$1; sumsq+=$1*$1} END {print sum/NR}'
   done > MM.boot-data.$RAND.MM
   
   if [ $OUTPUT -eq 1 ]
   then
-    cat MM.boot-data.$RAND.MM
+    echo "bootstrap out put in MM.boot-data.$RAND.MM"
+    twopointfive=$(echo "($BOOT*0.025)+0.1" | bc -l | xargs printf '%.0f\n')
+    median=$(echo "($BOOT*0.5)+0.1" | bc -l | xargs printf '%.0f\n')
+    nintysevenpointfive=$(echo "($BOOT*0.975)+0.1" | bc -l | xargs printf '%.0f\n')
+    five=$(echo "($BOOT*0.05)+0.1" | bc -l | xargs printf '%.0f\n')
+    nintyfive=$(echo "($BOOT*0.95)+0.1" | bc -l | xargs printf '%.0f\n')
+    sort -n MM.boot-data.$RAND.MM | sed -n -e "${twopointfive}p" -e "${five}p" -e "${median}p" -e "${nintyfive}p" -e "${nintysevenpointfive}p" > MM.range.$RAND.MM
+    echo "Bootstrap $BOOT repllicates of $SAMP samples"
+    paste <(echo -e "$twopointfive\n$five\n$median\n$nintyfive\n$nintysevenpointfive") MM.range.$RAND.MM
   else
     twopointfive=$(echo "($BOOT*0.025)+0.1" | bc -l | xargs printf '%.0f\n')
     median=$(echo "($BOOT*0.5)+0.1" | bc -l | xargs printf '%.0f\n')
@@ -87,8 +95,9 @@ else
     sort -n MM.boot-data.$RAND.MM | sed -n -e "${twopointfive}p" -e "${five}p" -e "${median}p" -e "${nintyfive}p" -e "${nintysevenpointfive}p" > MM.range.$RAND.MM
     echo "Bootstrap $BOOT repllicates of $SAMP samples"
     paste <(echo -e "$twopointfive\n$five\n$median\n$nintyfive\n$nintysevenpointfive") MM.range.$RAND.MM
+    rm MM.boot-data.$RAND.MM
   fi
-  rm MM.boot-data.$RAND.MM MM.range.$RAND.MM
+  rm MM.range.$RAND.MM
 fi
 rm MM.mean-data.$RAND.MM
 
