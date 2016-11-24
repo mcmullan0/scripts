@@ -42,7 +42,7 @@ then
   exit 1
 fi
 
-RAND=$((1 + RANDOM % 9999999999))
+RAND=$((1 + RANDOM % 999999999))
 
 
 tee MM.mean-data.$RAND.MM | awk -v c=$COLUMN '{sum+=$c; sumsq+=$c*$c} END {print "Mean =",sum/NR; print "StDv =",sqrt(sumsq/NR - (sum/NR)**2); print "SEM =", (sqrt(sumsq/NR - (sum/NR)**2))/sqrt(NR)}'
@@ -72,7 +72,7 @@ then
 else
   for (( iterator=0; iterator<$BOOT; iterator++ ))
   do
-    awk -v c=$COLUMN '{print $c}' MM.mean-data.$RAND.MM | gshuf -rn $SAMP | awk '{sum+=$1; sumsq+=$1*$1} END {print sum/NR}'
+    awk -v c=$COLUMN '{print $c}' MM.mean-data.$RAND.MM | shuf -rn $SAMP | awk '{sum+=$1; sumsq+=$1*$1} END {print sum/NR}'
   done > MM.boot-data.$RAND.MM
   
   if [ $OUTPUT -eq 1 ]
