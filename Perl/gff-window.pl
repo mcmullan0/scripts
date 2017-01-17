@@ -27,6 +27,7 @@ unless ($opts{i})
     print "\n-i Provide input file";
     print "\n-w Window size (default = 100000)";
     print "\n-s Slide width (default = 100000 = jumping window)";
+    print "\nCAUTION prints data for windows with nothing in only until the end of the last feature.  Fine for circos but not for correlations -Add feature";
     print "\n############################################################################################\n\n";
     exit;
 }
