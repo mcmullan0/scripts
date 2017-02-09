@@ -3,12 +3,14 @@
 # A script that first counts the number of columns in a vcf and gets number of individuals (assumes ind start at $10)
 # It then produces a file that lists all positions where all indivdiuals are ref/ref calls (0/0), 0|0 or 0|) = MM.pos-refref.MM
 # It then runs max-missing to retain only those sites with at least 1 call for an individual
-
+#
+# I later added a feature to remove all the ref/ref fixed differences (1/1), 1|1 or 1| across all individuals) to count the number of polymorphisms within a population
+#
 # Provide -i infile and state whether it is -h, -d OR -p for haploid, dipolid (unphased 0/1) OR diploid (phased 0|1)
 
 RAND=$((1 + RANDOM % 999999))
 
-while getopts "i:hdp" opt
+while getopts "i:hdpF" opt
 do
   case $opt in
     i)
@@ -35,14 +37,18 @@ do
       GENTYP='0|0'
       ELSE1='0|1'
       ELSE2='1|0'
-      ELSE2='1|1'
-      ELSE3='\.|\.'
-      ELSE4='0|\.'
-      ELSE5='\.|0'
-      ELSE6='1|\.'
-      ELSE7='\.|1'
+      ELSE3='1|1'
+      ELSE4='\.|\.'
+      ELSE5='0|\.'
+      ELSE6='\.|0'
+      ELSE7='1|\.'
+      ELSE8='\.|1'
       DIPLOID=1
       echo -en "You say this is phased diploid data ($GENTYP)\n"
+      ;;
+    F)
+      FIXED=1
+      echo -en "You also want to remove sites of Fixed differences\n"
       ;;
     \?)
       echo "Invalid option: -$OPTARG" >&2
@@ -62,13 +68,15 @@ then
   echo -ne "# It then produces a file that lists all positions where all indivdiuals are ref/ref calls (0/0), 0|0 or 0|) = MM.pos-refref_${RAND}.MM #\n"
   echo -ne "# It then runs max-missing to retain only those sites with at least 1 call for an individual (=[1/No. ind] / 2 (if diploid)           #\n"
   echo -ne "# Provide -i infile and state whether it is -h, -d OR -p for haploid, dipolid (unphased 0/1) OR diploid (phased 0|1)                  #\n"
+  echo -ne "#                                                                                                                                     #\n"
+  echo -ne "# If you want to also remove sites of fixed differences (1/1), 1|1 or 1| across all individuals) then use -F                          #\n"
   echo -ne "#######################################################################################################################################\n\n"
   exit 1
 fi
 
-# Provide -i infile and state whether it is -h, -d OR -p for haploid, dipolid (unphased 0/1) OR diploid (phased 0|1)"
 TOTALNO=$(grep -v '#' $INFILE | head -n 1 | awk '{print NF}')
 INDNO=$(($TOTALNO - 9))
+INDNO2=$(($INDNO*2))			# This is the required to hit if you want to remove all fixed differences
 
 # Calculate the proportion of a locus present at a single individual
 echo -e "\nThere are $INDNO individuals in your vcf\n"
@@ -98,7 +106,7 @@ rm MM.temp-nomis-2_${RAND}.MM MM.temp-nomis-1_${RAND}.MM
 if [ "$GENTYP" == '0' ]
 then 
   sed "s/$GENTYP/0/g" MM.temp-nomis-3_${RAND}.MM > MM.temp-replace_${RAND}.MM
-  sed "s/$ELSE1/1/g" MM.temp-replace_${RAND}.MM > MM.temp-replace2_${RAND}.MM; mv MM.temp-replace2_${RAND}.MM MM.temp-replace_${RAND}.MM
+  sed "s/$ELSE1/2/g" MM.temp-replace_${RAND}.MM > MM.temp-replace2_${RAND}.MM; mv MM.temp-replace2_${RAND}.MM MM.temp-replace_${RAND}.MM
   sed "s/$ELSE2/1/g" MM.temp-replace_${RAND}.MM > MM.temp-replace2_${RAND}.MM; mv MM.temp-replace2_${RAND}.MM MM.temp-replace_${RAND}.MM
 fi
 # if diploid
@@ -106,7 +114,7 @@ if [ "$GENTYP" == '0\/0' ]
 then
   sed "s/$GENTYP/0/g" MM.temp-nomis-3_${RAND}.MM > MM.temp-replace_${RAND}.MM
   sed "s/$ELSE1/1/g" MM.temp-replace_${RAND}.MM > MM.temp-replace2_${RAND}.MM; mv MM.temp-replace2_${RAND}.MM MM.temp-replace_${RAND}.MM
-  sed "s/$ELSE2/1/g" MM.temp-replace_${RAND}.MM > MM.temp-replace2_${RAND}.MM; mv MM.temp-replace2_${RAND}.MM MM.temp-replace_${RAND}.MM
+  sed "s/$ELSE2/2/g" MM.temp-replace_${RAND}.MM > MM.temp-replace2_${RAND}.MM; mv MM.temp-replace2_${RAND}.MM MM.temp-replace_${RAND}.MM
   sed "s/$ELSE3/1/g" MM.temp-replace_${RAND}.MM > MM.temp-replace2_${RAND}.MM; mv MM.temp-replace2_${RAND}.MM MM.temp-replace_${RAND}.MM
 fi
 # if phased diploid
@@ -115,19 +123,27 @@ then
   sed "s/$GENTYP/0/g" MM.temp-nomis-3_${RAND}.MM > MM.temp-replace_${RAND}.MM
   sed "s/$ELSE1/1/g" MM.temp-replace_${RAND}.MM > MM.temp-replace2_${RAND}.MM; mv MM.temp-replace2_${RAND}.MM MM.temp-replace_${RAND}.MM
   sed "s/$ELSE2/1/g" MM.temp-replace_${RAND}.MM > MM.temp-replace2_${RAND}.MM; mv MM.temp-replace2_${RAND}.MM MM.temp-replace_${RAND}.MM
-  sed "s/$ELSE3/1/g" MM.temp-replace_${RAND}.MM > MM.temp-replace2_${RAND}.MM; mv MM.temp-replace2_${RAND}.MM MM.temp-replace_${RAND}.MM
+  sed "s/$ELSE3/2/g" MM.temp-replace_${RAND}.MM > MM.temp-replace2_${RAND}.MM; mv MM.temp-replace2_${RAND}.MM MM.temp-replace_${RAND}.MM
   sed "s/$ELSE4/1/g" MM.temp-replace_${RAND}.MM > MM.temp-replace2_${RAND}.MM; mv MM.temp-replace2_${RAND}.MM MM.temp-replace_${RAND}.MM
   sed "s/$ELSE5/1/g" MM.temp-replace_${RAND}.MM > MM.temp-replace2_${RAND}.MM; mv MM.temp-replace2_${RAND}.MM MM.temp-replace_${RAND}.MM
   sed "s/$ELSE6/1/g" MM.temp-replace_${RAND}.MM > MM.temp-replace2_${RAND}.MM; mv MM.temp-replace2_${RAND}.MM MM.temp-replace_${RAND}.MM
   sed "s/$ELSE7/1/g" MM.temp-replace_${RAND}.MM > MM.temp-replace2_${RAND}.MM; mv MM.temp-replace2_${RAND}.MM MM.temp-replace_${RAND}.MM
+  sed "s/$ELSE8/1/g" MM.temp-replace_${RAND}.MM > MM.temp-replace2_${RAND}.MM; mv MM.temp-replace2_${RAND}.MM MM.temp-replace_${RAND}.MM
 fi
 
 # get all the chrom bp positions from the vcf
-# sum each row to identify rows of ref-ref sites (=0)
-grep -v '#' $INFILE | awk -v OFS='	' '{print $1,$2}' > MM.temp-pos_${RAND}.MM
+# sum each row to identify rows of a given number and paste into MM.pos-replace-sum_${RAND}.MM
+grep -v '#' $INFILE | awk -v OFS='\t' '{print $1,$2}' > MM.temp-pos_${RAND}.MM
 awk '{sum=0; for (i=1; i<=NF; i++) { sum+= $i } print sum}' MM.temp-replace_${RAND}.MM >> MM.temp-sum_${RAND}.MM
 paste MM.temp-pos_${RAND}.MM MM.temp-replace_${RAND}.MM MM.temp-sum_${RAND}.MM > MM.pos-replace-sum_${RAND}.MM; rm MM.temp-pos_${RAND}.MM MM.temp-replace_${RAND}.MM MM.temp-sum_${RAND}.MM
-awk '$NF==0' MM.pos-replace-sum_${RAND}.MM | awk -v OFS='   ' '{print $1,$2}' > MM.pos-refref_${RAND}.MM
+
+# if -F then grap both the zero rows and the ind*2 rows ($INDNO2) else just the zero rows
+if [ "$FIXED" == 1 ]
+then
+  awk -v f=$INDNO2 '$NF==0 || $NF==f' MM.pos-replace-sum_${RAND}.MM | awk -v OFS='\t' '{print $1,$2}' > MM.pos-refref_${RAND}.MM
+else
+  awk '$NF==0' MM.pos-replace-sum_${RAND}.MM | awk -v OFS='\t' '{print $1,$2}' > MM.pos-refref_${RAND}.MM
+fi
 
 # Run vcftools
 
