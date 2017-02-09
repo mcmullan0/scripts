@@ -20,6 +20,7 @@ do
       GENTYP='0'
       ELSE1='1'
       ELSE2='\.'
+      DIPLOID=0
       echo -en "You say this is haploid data ($GENTYP)\n"
       ;;
     d)
@@ -27,6 +28,7 @@ do
       ELSE1='0\/1'
       ELSE2='1\/1'
       ELSE3='\.\/\.'
+      DIPLOID=1
       echo -en "You say this is unphased diploid data ($GENTYP)\n"
       ;;
     p)
@@ -39,6 +41,7 @@ do
       ELSE5='\.|0'
       ELSE6='1|\.'
       ELSE7='\.|1'
+      DIPLOID=1
       echo -en "You say this is phased diploid data ($GENTYP)\n"
       ;;
     \?)
@@ -57,7 +60,7 @@ then
   echo -ne "\n\n########################################################### vcf-ref-ref.sh ############################################################\n"
   echo -ne "# A script that first counts the number of columns in a vcf (=No. ind) (assumes ind start at $10)                                       #\n"
   echo -ne "# It then produces a file that lists all positions where all indivdiuals are ref/ref calls (0/0), 0|0 or 0|) = MM.pos-refref_${RAND}.MM #\n"
-  echo -ne "# It then runs max-missing to retain only those sites with at least 1 call for an individual (=[1/No. ind] / 2)                       #\n"
+  echo -ne "# It then runs max-missing to retain only those sites with at least 1 call for an individual (=[1/No. ind] / 2 (if diploid)           #\n"
   echo -ne "# Provide -i infile and state whether it is -h, -d OR -p for haploid, dipolid (unphased 0/1) OR diploid (phased 0|1)                  #\n"
   echo -ne "#######################################################################################################################################\n\n"
   exit 1
@@ -69,7 +72,13 @@ INDNO=$(($TOTALNO - 9))
 
 # Calculate the proportion of a locus present at a single individual
 echo -e "\nThere are $INDNO individuals in your vcf\n"
-MAXMIS=$(awk -v a=$INDNO 'BEGIN { print (1 / a) / 2 }')
+if [ "$DIPLOID" == '1' ]
+then
+  MAXMIS=$(awk -v a=$INDNO 'BEGIN { print (1 / a) / 2 }')
+else
+  MAXMIS=$(awk -v a=$INDNO 'BEGIN { print (1 / a) }')
+fi
+
 echo "max-missing = $MAXMIS"
 
 echo "" > MM.temp-nomis-1_${RAND}.MM
