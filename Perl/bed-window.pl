@@ -44,8 +44,8 @@ print "# infile = $opts{i}; window = $opts{w}; slide = $opts{s}\n";
 open(INFILE, "<$opts{i}") or die "cannot open < $opts{i}: $!";
 foreach my $line (<INFILE>)
 {
-    my $start = 0;
-    my $end = $start + ($opts{w}-1);
+    my $start = 1;
+    my $end = $start + ($opts{w});
     my $endscaff = 0;
     chomp($line);
     $endscaff = $line;
@@ -59,7 +59,7 @@ foreach my $line (<INFILE>)
         }
         else
         {
-            print "$start\t$end\n";
+            print "$opts{f}\t$start\t$end\n";
             $start = $start+$opts{s};
             $end = $end+$opts{s};
         }
@@ -71,6 +71,6 @@ foreach my $line (<INFILE>)
     }
     else
     {
-        print "$start\t$endscaff\n"; 
+        print "$opts{f}\t$start\t$endscaff\n"; 
     }
 }
