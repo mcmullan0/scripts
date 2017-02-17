@@ -73,4 +73,5 @@ foreach my $line (<INFILE>)
     {
         print "$opts{f}\t$start\t$endscaff\n"; 
     }
+    $opts{f}=$opts{f}+1;
 }
