@@ -45,7 +45,7 @@ open(INFILE, "<$opts{i}") or die "cannot open < $opts{i}: $!";
 foreach my $line (<INFILE>)
 {
     my $start = 1;
-    my $end = $start + ($opts{w});
+    my $end = $start + ($opts{w}-1);
     my $endscaff = 0;
     chomp($line);
     $endscaff = $line;
