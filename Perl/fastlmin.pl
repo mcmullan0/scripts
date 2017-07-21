@@ -8,7 +8,7 @@ use Getopt::Std;
 my %opts;
 # accept input file -i (argument)
 # what is the minimum length you want
-getopts('i:l:', \%opts);
+getopts('i:l:p', \%opts);
 if ($opts{i})
 {
     unless (open(INFILE, $opts{i}))
@@ -20,24 +20,38 @@ if ($opts{i})
 else
 {
     print "\nstrips all sequences shorter than -l from a fasta file";
-    print "\nEnter -i filename\nState minimum length of sequence (includes last whtspc)\n\n";
+    print "\nEnter -i filename\nState minimum length of sequence (includes last whtspc)\nOr -p instead of -l to print seq lengths\n\n";
     exit;
 }
-unless ($opts{l})
+unless ($opts{l} || $opts{p})
 {
     print "\nState minimum length of sequence\n\n";
     exit;
 }
-my $title = ();
-foreach my $line (<INFILE>)
+if ($opts{l})
 {
-    if ($line =~ m/^>/)
+    my $title = ();
+    foreach my $line (<INFILE>)
     {
-        $title = $line;
+        if ($line =~ m/^>/)
+        {
+            $title = $line;
+        }
+        my $length = length($line);
+        if ($length >= $opts{l})
+        {
+            print "$title$line";
+        }
     }
-    my $length = length($line);
-    if ($length >= $opts{l})
+}
+else
+{
+    foreach my $line (<INFILE>)
     {
-        print "$title$line";
+        if ($line !~ m/^>/)
+        {
+            my $length = length($line);
+            print "$length\n";
+        }
     }
 }

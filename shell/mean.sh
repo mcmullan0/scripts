@@ -72,7 +72,7 @@ then
 else
   for (( iterator=0; iterator<$BOOT; iterator++ ))
   do
-    awk -v c=$COLUMN '{print $c}' MM.mean-data.$RAND.MM | shuf -rn $SAMP | awk '{sum+=$1; sumsq+=$1*$1} END {print sum/NR}'
+    awk -v c=$COLUMN '{print $c}' MM.mean-data.$RAND.MM | gshuf -rn $SAMP | awk '{sum+=$1; sumsq+=$1*$1} END {print sum/NR}'
   done > MM.boot-data.$RAND.MM
   
   if [ $OUTPUT -eq 1 ]
