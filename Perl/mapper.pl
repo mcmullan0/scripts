@@ -131,16 +131,28 @@ for (my $i = 0; $i < $lineno; $i++)
 #
 #
 #
-# SLURM submission line§
+# SLURM submission lines THIS IS THE STANDARD SUBMISSION LINE
   if ($opts{p})
   {
-    print "submit-slurm.pl -j $opts{j}-$readolist[$i] -q $opts{q} -c 16 -m 16384 -t 1-00:00 -e -i \"source samtools-0.1.19; source bwa-0.7.7; srun bwa mem -t 16 $opts{f} $read1list[$i] $read2list[$i] | samtools view -Shb - | samtools sort - $readolist[$i]-s; srun samtools rmdup $readolist[$i]-s.bam $readolist[$i]-sr.bam; srun samtools index $readolist[$i]-sr.bam; rm $readolist[$i]-s.bam; srun samtools mpileup -uDgf $opts{f} $readolist[$i]-sr.bam | bcftools view -bvcg - > $readolist[$i]-sr.raw.bcf\"\n";
+    print "submit-slurm.pl -j $opts{j}-$readolist[$i] -q $opts{q} -c 16 -m 16384 -t 1-00:00 -e -i \"source samtools-1.5; source source bwa-0.7.13; srun bwa mem -t 16 $opts{f} $read1list[$i] $read2list[$i] | samtools view -Shb - | samtools sort - $readolist[$i]-s; srun samtools rmdup $readolist[$i]-s.bam $readolist[$i]-sr.bam; srun samtools index $readolist[$i]-sr.bam; rm $readolist[$i]-s.bam; srun samtools mpileup -uDgf $opts{f} $readolist[$i]-sr.bam | bcftools view -bcg - > $readolist[$i]-sr.raw.bcf\"\n";
   }
- else
+  else
   {
-    system("submit-slurm.pl -j $opts{j}-$readolist[$i] -q $opts{q} -c 16 -m 16384 -t 1-00:00 -e -i \"source samtools-0.1.19; source bwa-0.7.7; srun bwa mem -t 16 $opts{f} $read1list[$i] $read2list[$i] | samtools view -Shb - | samtools sort - $readolist[$i]-s; srun samtools rmdup $readolist[$i]-s.bam $readolist[$i]-sr.bam; srun samtools index $readolist[$i]-sr.bam; rm $readolist[$i]-s.bam; srun samtools mpileup -uDgf $opts{f} $readolist[$i]-sr.bam | bcftools view -bvcg - > $readolist[$i]-sr.raw.bcf\"");
+    system("submit-slurm.pl -j $opts{j}-$readolist[$i] -q $opts{q} -c 16 -m 16384 -t 1-00:00 -e -i \"source samtools-1.5; source source bwa-0.7.13; srun bwa mem -t 16 $opts{f} $read1list[$i] $read2list[$i] | samtools view -Shb - | samtools sort - $readolist[$i]-s; srun samtools rmdup $readolist[$i]-s.bam $readolist[$i]-sr.bam; srun samtools index $readolist[$i]-sr.bam; rm $readolist[$i]-s.bam; srun samtools mpileup -uDgf $opts{f} $readolist[$i]-sr.bam | bcftools view -bcg - > $readolist[$i]-sr.raw.bcf\"");
   }
 #
+#
+# SLURM submission lines for DISCOVAR (no rndup)
+#  if ($opts{p})
+#  {
+#    print "submit-slurm.pl -j $opts{j}-$readolist[$i] -q $opts{q} -c 16 -m 16384 -t 1-00:00 -e -i \"source samtools-0.1.19; source bwa-0.7.7; srun bwa mem -t 16 $opts{f} $read1list[$i] $read2list[$i] | samtools view -Shb - | samtools sort - $readolist[$i]-s; srun samtools index $readolist[$i]-s.bam; srun samtools mpileup -uDgf $opts{f} $readolist[$i]-s.bam | bcftools view -bcg - > $readolist[$i]-s.raw.bcf\"\n";
+#  }
+#  else
+#  {
+#    system("submit-slurm.pl -j $opts{j}-$readolist[$i] -q $opts{q} -c 16 -m 16384 -t 1-00:00 -e -i \"source samtools-0.1.19; source bwa-0.7.7; srun bwa mem -t 16 $opts{f} $read1list[$i] $read2list[$i] | samtools view -Shb - | samtools sort - $readolist[$i]-s; srun samtools index $readolist[$i]-s.bam; srun samtools mpileup -uDgf $opts{f} $readolist[$i]-s.bam | bcftools view -bcg - > $readolist[$i]-s.raw.bcf\"");
+#  }
+#
+
 # mem | samtools -view | -sort | -rmdup | -index > save .bams for multisample vcf [27/05/15] got an EOF absent messege...
 #  if ($opts{p})
 #  {
