@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-while getopts "c:b:s:oB" opt
+HEADER=0
+while getopts "c:b:s:oBh" opt
 do
   case $opt in
     c)
@@ -18,6 +19,9 @@ do
     o)
       OUTPUT=1
       ;;
+    h)
+      HEADER=1
+      ;;
     \?)
       echo "Invalid option: -$OPTARG" >&2
       exit 1
@@ -32,21 +36,53 @@ done
 if [ -z ${COLUMN+x} ]
 then
   echo -ne "\n\n########################################################### mean.sh ############################################################\n"
-  echo -ne "#     A script that Provids the mean, Standard Devaiaiton and Standard Error of the Mean                                       #\n"
-  echo -ne "#     Provide a table or column of numbers via the pipe and then use -c to tell mean.sh which column you want to read in       #\n"
+  echo -ne "#     A script that Provids the sum, count , min, max, mean, median, Standard Devaiaiton and Standard Error of the Mean        #\n"
+  echo -ne "#     Provide a table or column of numbers via the pipe and then use -c to tell mean.sh which column you want to read in.       #\n"
+  echo -ne "#     Print a header using -h                                                                                                      #\n"
   echo -ne "#     Bootstrap input column with -B to run the bootstrap                                                                      #\n"
   echo -ne "#                                 -b <default 1000 bootraps>                                                                   #\n"
   echo -ne "#                                 -s <sample size default = whole column>                                                      #\n"
   echo -ne "#                                 -o output column of all means (to pipe to return own CI -default 95%)                        #\n"
+  echo -ne "# Print a header using -h                                                                                                      #\n"
   echo -ne "################################################################################################################################\n\n"
   exit 1
 fi
 
 RAND=$((1 + RANDOM % 999999999))
 
+# Old script that doesn't deal well with non numerical values as ut counts the line but can't sum the string.
+#tee MM.mean-data.$RAND.MM | awk -v c=$COLUMN '{sum+=$c; sumsq+=$c*$c} END {print "Mean =",sum/NR; print "StDv =",sqrt(sumsq/NR - (sum/NR)**2); print "SEM =", (sqrt(sumsq/NR - (sum/NR)**2))/sqrt(NR)}'
 
-tee MM.mean-data.$RAND.MM | awk -v c=$COLUMN '{sum+=$c; sumsq+=$c*$c} END {print "Mean =",sum/NR; print "StDv =",sqrt(sumsq/NR - (sum/NR)**2); print "SEM =", (sqrt(sumsq/NR - (sum/NR)**2))/sqrt(NR)}'
+# New script downlaoded from https://unix.stackexchange.com/questions/13731/is-there-a-way-to-get-the-min-max-median-and-average-of-a-list-of-numbers-in
 
+if [ "$HEADER" -eq "1" ]
+then
+echo -e "sum\tCount\tMean\tMedian\tMin\tMax\tStdv\tsem"
+fi
+
+tee MM.mean-data.$RAND.MM | awk -v c=$COLUMN '{print $c}' | sort -n | awk '
+  BEGIN {
+    c = 0;
+    sum = 0;
+  }
+  $1 ~ /^[0-9]*(\.[0-9]*)?$/ {
+    a[c++] = $1;
+    sum += $1;
+    sumsq += $1*$1
+  }
+  END {
+    ave = sum / c;
+    if( (c % 2) == 1 ) {
+      median = a[ int(c/2) ];
+    } else {
+      median = ( a[c/2] + a[c/2-1] ) / 2;
+    }
+    stdv = sqrt( sumsq / c - ( sum / c)**2 )
+    sem = (sqrt( sumsq / c - ( sum / c )**2)) / sqrt(c)
+    OFS="\t";
+    print sum, c, ave, median, a[0], a[c-1], stdv, sem;
+  }
+'
 
 # Bootstrap
 # Repicates
@@ -72,7 +108,7 @@ then
 else
   for (( iterator=0; iterator<$BOOT; iterator++ ))
   do
-    awk -v c=$COLUMN '{print $c}' MM.mean-data.$RAND.MM | gshuf -rn $SAMP | awk '{sum+=$1; sumsq+=$1*$1} END {print sum/NR}'
+    awk -v c=$COLUMN '{print $c}' MM.mean-data.$RAND.MM | shuf -rn $SAMP | awk '{sum+=$1; sumsq+=$1*$1} END {print sum/NR}'
   done > MM.boot-data.$RAND.MM
   
   if [ $OUTPUT -eq 1 ]
