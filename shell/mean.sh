@@ -36,7 +36,7 @@ done
 if [ -z ${COLUMN+x} ]
 then
   echo -ne "\n\n########################################################### mean.sh ############################################################\n"
-  echo -ne "#     A script that Provids the sum, count , min, max, mean, median, Standard Devaiaiton and Standard Error of the Mean        #\n"
+  echo -ne "#     A script that Provids the sum, count, mean, median, min, max, Standard Devaiaiton and Standard Error of the Mean        #\n"
   echo -ne "#     Provide a table or column of numbers via the pipe and then use -c to tell mean.sh which column you want to read in.       #\n"
   echo -ne "#     Print a header using -h                                                                                                      #\n"
   echo -ne "#     Bootstrap input column with -B to run the bootstrap                                                                      #\n"
