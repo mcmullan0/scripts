@@ -19,9 +19,9 @@ unless ($opts{i})
   print STDOUT "         -q queue (default = tgac-short (-6h); OR: tgac-medium (-6d), tgac-long)\n";
   print STDOUT "         -N nodes (default = 1)\n";
   print STDOUT "         -n tasks (default = 1)\n";
-  print STDOUT "         -c cores/threads (default = 4)\n";
-  print STDOUT "         -m memory (in mb; default = 4096)\n";
-  print STDOUT "         -t time (default = 0-0:20 (20 mins); -t no longer than queue)\n";
+  print STDOUT "         -c cores/threads (default = 1)\n";
+  print STDOUT "         -m memory (in mb; default = 1024)\n";
+  print STDOUT "         -t time (default = 0-0:45 (45 mins); -t no longer than queue)\n";
   print STDOUT "         -e (if you want it to email you on complete.  Default = n)\n";
   print STDOUT "         -r Do not remove the run file (default = rm MM-runfile-MM)\n";
   print STDOUT "Appends this run info to your .out and .err files (before slurm); --open-mode=append\n";
@@ -48,15 +48,15 @@ unless ($opts{n})
 }
 unless ($opts{c})
 {
-  $opts{c}=4;
+  $opts{c}=1;
 }
 unless ($opts{t})
 {
-  $opts{t}="0-0:20";
+  $opts{t}="0-0:45";
 }
 unless ($opts{m})
 {
-  $opts{m}="4096";
+  $opts{m}="1024";
 }
 
 # Add run info to slurm .out & .err files
