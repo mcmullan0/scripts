@@ -68,6 +68,7 @@ then
   echo -ne "# It then produces a file that lists all positions where all indivdiuals are ref/ref calls (0/0), 0|0 or 0|) = MM.pos-refref_${RAND}.MM #\n"
   echo -ne "# It then runs max-missing to retain only those sites with at least 1 call for an individual (=[1/No. ind] / 2 (if diploid)           #\n"
   echo -ne "# Provide -i infile and state whether it is -h, -d OR -p for haploid, dipolid (unphased 0/1) OR diploid (phased 0|1)                  #\n"
+  echo -ne "#\tThe outfile name is generated automatically from the infile name (remove '.vcf')                                              #\n"
   echo -ne "#                                                                                                                                     #\n"
   echo -ne "# If you want to also remove sites of fixed differences (1/1), 1|1 or 1| across all individuals) then use -F                          #\n"
   echo -ne "#######################################################################################################################################\n\n"
