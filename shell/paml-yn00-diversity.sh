@@ -34,7 +34,7 @@ do
   esac
 done
 
-if [ -z ${INFILE+f} ]
+if [ -z ${DIRECTORY_FILE+f} ]
 then
   echo -ne "\n\n######################################################## paml-yn00-diversity.sh ############################################################\n"
   echo -ne "# Uses a directory of (multi-individual) gene fastas to return average dnds (YN00) for each gene\n"
@@ -210,7 +210,10 @@ do
 done
 
 mkdir paml-yn00-diversity_slurmout
-mv phy-mm*.slurm yn00-mm*.slurm mean_*.slurm ls*yn00.fas.list paml-yn00-diversity_slurmout
+mv phy-mm*.slurm yn00-mm*.slurm mean_*.slurm *yn00.fas.list *.stops-present.list paml-yn00-diversity_slurmout
+rm *.stops-removed.list
+
+echo -ne "\n\n\tRun complete\n\n"
 
 exit
 
