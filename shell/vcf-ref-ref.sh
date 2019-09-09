@@ -90,9 +90,9 @@ fi
 
 echo "max-missing = $MAXMIS"
 
-echo "" > MM.temp-nomis-1_${RAND}.MM
-echo "" > MM.temp-nomis-2_${RAND}.MM
-echo "" > MM.temp-nomis-3_${RAND}.MM
+> MM.temp-nomis-1_${RAND}.MM
+> MM.temp-nomis-2_${RAND}.MM
+> MM.temp-nomis-3_${RAND}.MM
 for IND in $(seq 10 $TOTALNO)
 do
   grep -v '#' $INFILE | awk -v COLUMN=$IND '{print $COLUMN}' | cut -d ':' -f 1 > MM.temp-nomis-1_${RAND}.MM
@@ -147,7 +147,6 @@ else
 fi
 
 # Run vcftools
-
 OUTFILE=$(echo $INFILE | sed 's/.vcf//')
 source vcftools-0.1.13
 vcftools --vcf $INFILE --exclude-positions MM.pos-refref_${RAND}.MM --recode --out ${OUTFILE}.no-refref 
