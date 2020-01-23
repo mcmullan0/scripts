@@ -89,8 +89,8 @@ do
   cd ${NEWDR}
   while read FAS
   do
-    EMPTY=$(cat ${DIRECTORY}/\${FAS}.fas | wc -l)
-    if [ $EMPTY != \"0\" ]
+    EMPTY=\$(cat ${DIRECTORY}/\${FAS}.fas | wc -l)
+    if [ \${EMPTY} -ne \"0\" ]
     then
       fastx_collapser -i ${DIRECTORY}/\${FAS}.fas | Fasta2Phylip.pl - \${FAS}.temp
       cat <(sed -n '1p' \${FAS}.temp | awk '{l=\$2-3; print \$1,l}') <(sed '1d' \${FAS}.temp | sed 's/...\$//') | sed \$'s/\t/  /' > \${FAS}.phy

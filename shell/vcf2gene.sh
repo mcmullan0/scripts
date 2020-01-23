@@ -348,6 +348,11 @@ do
       do
         grep -A 1 \"\${ALLGENES}\" individuals_genes/\${INDFAS}.filt.cds.present.fas | sed \"s/>.*/>\${ALLGENES}-\${INDFAS}/\" >> ${OUTDIR}/\${ALLGENES}.fas
       done < ${POPULATIONS}
+      EMPTY=\$(cat ${OUTDIR}/\${ALLGENES}.fas | wc -l)
+      if [ \${EMPTY} -eq \"0\" ]
+      then
+        rm ${OUTDIR}/\${ALLGENES}.fas
+      fi
     done <$GENESETS"
   done
 done
