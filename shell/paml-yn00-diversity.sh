@@ -76,6 +76,8 @@ fi
 
 #  This generates new directories and converts fasta files in original dirs to Phylip
 ## Assumes the old directory name  ends in ..._outputdir
+### Pangenome: In the case that the individuals with this gene are not present in this analysis
+### count lines in the fasta to determine whether to use it.
 while read DIRECTORY
 do
   HOLDER=$(echo "${DIRECTORY%_*}" | awk -F '/' '{print $NF}')
@@ -85,12 +87,17 @@ do
   source fastx_toolkit-0.0.13.2
   submit-slurm.pl -j phy-mm_${NEWDR} -i "\
   cd ${NEWDR}
-  echo -e \"\nPremature End-Of-File messages probably indicate that the fasta was empty\n\" >&2
   while read FAS
   do
-    fastx_collapser -i ${DIRECTORY}/\${FAS}.fas | Fasta2Phylip.pl - \${FAS}.temp
-    cat <(sed -n '1p' \${FAS}.temp | awk '{l=\$2-3; print \$1,l}') <(sed '1d' \${FAS}.temp | sed 's/...\$//') | sed \$'s/\t/  /' > \${FAS}.phy
-    rm \${FAS}.temp
+    EMPTY=$(cat ${DIRECTORY}/\${FAS}.fas | wc -l)
+    if [ $EMPTY != \"0\" ]
+    then
+      fastx_collapser -i ${DIRECTORY}/\${FAS}.fas | Fasta2Phylip.pl - \${FAS}.temp
+      cat <(sed -n '1p' \${FAS}.temp | awk '{l=\$2-3; print \$1,l}') <(sed '1d' \${FAS}.temp | sed 's/...\$//') | sed \$'s/\t/  /' > \${FAS}.phy
+      rm \${FAS}.temp
+    else
+      echo -e \"${NEWDR} \${FAS}.fas has zero haplotypes in this population/set.\"
+    fi
   done < ../${NEWDR}.fas.list
   cd ../"
 done < $DIRECTORY_FILE
@@ -125,10 +132,9 @@ do
   submit-slurm.pl -j yn00-mm_${NEWDR} -i "cd $NEWDR
   while read GENES
   do 
-    echo \"I'm in\"
     sed \"s/MM\.sedreplace\.MM/\${GENES}.phy/\" ../yn00.ctl > yn00-run_${HOLDER}-\${GENES}.ctl
-    echo \"I've done the sed replace\"
     echo -e \"$DIRECTORY\n$HOLDER\n$NEWDR\n\${GENES}\"
+    wc -l yn00-run_${HOLDER}-\${GENES}.ctl
     STOP=\$(yn00 yn00-run_${HOLDER}-\${GENES}.ctl | grep 'stop codon' | wc -l)
     echo \"\$GENES \$STOP\"
     if [ \$STOP -eq \"0\" ]
@@ -177,13 +183,13 @@ do
     echo \"\$STOPSREMOVED\"
     if [ \"\$NOLINE8\" -eq \"0\" ]
     then
-      echo -e \"NA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\"
+      echo -e \"NA\tNA\tNA\tNA\tNA\tNA\tNA\"
     else
       tail -n \$NOLINE8 \${STOPSREMOVED}.phy.yn.yn00 | awk '\$11>0' > MM.\${STOPSREMOVED}.phy.yn.yn00.ds-gt0.MM
       NOLINEMORE=\$(cat MM.\${STOPSREMOVED}.phy.yn.yn00.ds-gt0.MM | wc -l)
       if [ \"\$NOLINEMORE\" -eq \"0\" ]
       then
-        echo -e \"NA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\"
+        echo -e \"NA\tNA\tNA\tNA\tNA\tNA\tNA\"
       else
         awk -v OFS='\t' '{S+=\$3; N+=\$4; t+=\$5; kappa+=\$6; omega+=\$7; dN+=\$8; dS+=\$11} END {print S/NR, N/NR, t/NR, kappa/NR, omega/NR, dN/NR, dS/NR}' MM.\${STOPSREMOVED}.phy.yn.yn00.ds-gt0.MM
       fi
