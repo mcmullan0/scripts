@@ -19,8 +19,10 @@
 RAND=$((1 + RANDOM % 999999))
 # -f takes the directory file
 # -c states that the control file exists already and to use it and run anyway
+# -z prints scores for genes without any dS varients
 CTL=0
-while getopts "f:c" opt
+zeros=0
+while getopts "f:cz" opt
 do
   case $opt in
     f)
@@ -30,6 +32,9 @@ do
       ;;
     c)
       CTL=1
+      ;;
+    z)
+      zeros=1
       ;;
   esac
 done
@@ -42,6 +47,8 @@ then
   echo -ne "# (Run after vcf2gene.sh)\n"
   echo -ne "# Requires:\n"
   echo -ne "#\t-f a file containing the full path to each population directory\n"
+  echo -ne "#\t-z a flag that prevents the removal of genes with zero dS SNPs.\n"
+  echo -ne "#\t   This may massivly overinflate omega because of a divistion by zero but could be useful if you want to see these events.\n"
   echo -ne "#\t\tDirectories will contain a fasta file for each gene with entries for each individual/sequence\n"
   echo -ne "#\t\tRemove any trailing '/' from each line\n"
   echo -ne "#\t-c if you don't want this script to print a YN00 control file (if you have one of your own).\n"
@@ -184,7 +191,7 @@ do
     if [ \"\$NOLINE8\" -eq \"0\" ]
     then
       echo -e \"NA\tNA\tNA\tNA\tNA\tNA\tNA\"
-    else
+    elif [ \"$zeros\" -eq \"0\" ]
       tail -n \$NOLINE8 \${STOPSREMOVED}.phy.yn.yn00 | awk '\$11>0' > MM.\${STOPSREMOVED}.phy.yn.yn00.ds-gt0.MM
       NOLINEMORE=\$(cat MM.\${STOPSREMOVED}.phy.yn.yn00.ds-gt0.MM | wc -l)
       if [ \"\$NOLINEMORE\" -eq \"0\" ]
@@ -193,10 +200,22 @@ do
       else
         awk -v OFS='\t' '{S+=\$3; N+=\$4; t+=\$5; kappa+=\$6; omega+=\$7; dN+=\$8; dS+=\$11} END {print S/NR, N/NR, t/NR, kappa/NR, omega/NR, dN/NR, dS/NR}' MM.\${STOPSREMOVED}.phy.yn.yn00.ds-gt0.MM
       fi
+    elif [ \"$zeros\" -eq \"1\" ]
+      tail -n \$NOLINE8 \${STOPSREMOVED}.phy.yn.yn00 > MM.\${STOPSREMOVED}.phy.yn.yn00.ds-eq0.MM
+      NOLINEMORE=\$(cat MM.\${STOPSREMOVED}.phy.yn.yn00.ds-gt0.MM | wc -l)
+      if [ \"\$NOLINEMORE\" -eq \"0\" ]
+      then
+        echo -e \"NA\tNA\tNA\tNA\tNA\tNA\tNA\"
+      else
+        awk -v OFS='\t' '{S+=\$3; N+=\$4; t+=\$5; kappa+=\$6; omega+=\$7; dN+=\$8; dS+=\$11} END {print S/NR, N/NR, t/NR, kappa/NR, omega/NR, dN/NR, dS/NR}' MM.\${STOPSREMOVED}.phy.yn.yn00.ds-eq0.MM
     fi
   done < ../${NEWDR}.fas.stops-removed.list | paste - - > MM.temp.yn00.out-${NEWDR}.MM
   # Add headers and clean up
-  cat <(echo -e \"Gene\tS\tN\tt\tkappa\tomega\tdN\tdS\") MM.temp.yn00.out-${NEWDR}.MM > ../${NEWDR}.yn00.mean.txt
+  if [ \"$zeros\" -eq \"0\" ]
+    cat <(echo -e \"Gene\tS\tN\tt\tkappa\tomega\tdN\tdS\") MM.temp.yn00.out-${NEWDR}.MM > ../${NEWDR}.yn00.mean.txt
+  else
+    cat <(echo -e \"Gene\tS\tN\tt\tkappa\tomega\tdN\tdS\") MM.temp.yn00.out-${NEWDR}.MM > ../${NEWDR}.yn00.mean_omega-infinity.txt
+  fi
   rm MM.temp.yn00.out-${NEWDR}.MM
   cd ../
   rm -r $NEWDR"
