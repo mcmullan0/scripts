@@ -19,10 +19,13 @@
 RAND=$((1 + RANDOM % 999999))
 # -f takes the directory file
 # -c states that the control file exists already and to use it and run anyway
-# -z prints scores for genes without any dS varients
+# -Q prints scores for genes without any dS varients
 CTL=0
 zeros=0
-while getopts "f:cz" opt
+kleen=0
+# FYI $USER is assumed to be set to the current user for checking when jobs have finished in the queue
+
+while getopts "f:cQk" opt
 do
   case $opt in
     f)
@@ -33,13 +36,17 @@ do
     c)
       CTL=1
       ;;
-    z)
+    Q)
       zeros=1
+      ;;
+    k)
+      kleen=1
       ;;
   esac
 done
 
-if [ -z ${DIRECTORY_FILE+f} ]
+
+if [[ -z ${DIRECTORY_FILE+f} ]]
 then
   echo -ne "\n\n######################################################## paml-yn00-diversity.sh ############################################################\n"
   echo -ne "# Uses a directory of (multi-individual) gene fastas to return average dnds (YN00) for each gene\n"
@@ -47,11 +54,12 @@ then
   echo -ne "# (Run after vcf2gene.sh)\n"
   echo -ne "# Requires:\n"
   echo -ne "#\t-f a file containing the full path to each population directory\n"
-  echo -ne "#\t-z a flag that prevents the removal of genes with zero dS SNPs.\n"
+  echo -ne "#\t   Directories will contain a fasta file for each gene with entries for each individual/sequence\n"
+  echo -ne "#\t   Remove any trailing '/' from each line\n"
+  echo -ne "#\t-Q a flag that prevents the removal of genes with zero dS SNPs.\n"
   echo -ne "#\t   This may massivly overinflate omega because of a divistion by zero but could be useful if you want to see these events.\n"
-  echo -ne "#\t\tDirectories will contain a fasta file for each gene with entries for each individual/sequence\n"
-  echo -ne "#\t\tRemove any trailing '/' from each line\n"
   echo -ne "#\t-c if you don't want this script to print a YN00 control file (if you have one of your own).\n"
+  echo -ne "#\t-k if you want to keep all the intermediate phylip and YN00 control files and output.\n"
   echo -ne "# Accepts output from vcf2gene.sh which generates gene fastas from a vcf and a reference fasta genome\n"
   echo -ne "#\tConverts fasta to phylip\n"
   echo -ne "#\tIdentifies genes with a premature stop codon polymorphism (see POPULATION.stops-present.list) which are not run\n"
@@ -64,12 +72,10 @@ then
 fi
 
 
-
-
 PAMLCTL='yn00.ctl'
-if [ $CTL -eq "0" ]
+if [[ "$CTL" -eq "0" ]]
 then
-  if [ -f "$PAMLCTL" ]
+  if [[ -f "$PAMLCTL" ]]
   then
     echo -e "\n\n$PAMLCTL exists"
     echo -e "You may want to use your own yn00.ctl which is already in the directory.\nIf so add the -c option"
@@ -85,23 +91,46 @@ fi
 ## Assumes the old directory name  ends in ..._outputdir
 ### Pangenome: In the case that the individuals with this gene are not present in this analysis
 ### count lines in the fasta to determine whether to use it.
+# If the gene too long fastx_collaper won't work so I do it myself (see LONFAS and FASLEN
 while read DIRECTORY
 do
   HOLDER=$(echo "${DIRECTORY%_*}" | awk -F '/' '{print $NF}')
   NEWDR="${HOLDER}_yn00"
   mkdir -p "$NEWDR"
-  ls $DIRECTORY/*.fas | awk -F '/' '{print $NF}' | cut -d '.' -f 1 > ${NEWDR}.fas.list
-  source fastx_toolkit-0.0.13.2
-  submit-slurm.pl -j phy-mm_${NEWDR} -i "\
+  submit-slurm.pl -j phy-mm_${NEWDR}_01 -i "source fastx_toolkit-0.0.13.2
+  ls ${DIRECTORY}/*.fas | awk -F '/' '{print \$NF}' | cut -d '.' -f 1 > ${NEWDR}.fas.list
   cd ${NEWDR}
   while read FAS
   do
     EMPTY=\$(cat ${DIRECTORY}/\${FAS}.fas | wc -l)
-    if [ \${EMPTY} -ne \"0\" ]
+    if [[ \"\${EMPTY}\" -ne \"0\" ]]
     then
-      fastx_collapser -i ${DIRECTORY}/\${FAS}.fas | Fasta2Phylip.pl - \${FAS}.temp
-      cat <(sed -n '1p' \${FAS}.temp | awk '{l=\$2-3; print \$1,l}') <(sed '1d' \${FAS}.temp | sed 's/...\$//') | sed \$'s/\t/  /' > \${FAS}.phy
-      rm \${FAS}.temp
+      LONFAS=\$(sed -n '2p' ${DIRECTORY}/\${FAS}.fas | wc -m)
+      FASLEN=\$(( \$LONFAS - 4 ))
+      if [[ \"\${FASLEN}\" -lt \"23500\" ]]
+      then
+        fastx_collapser -i ${DIRECTORY}/\${FAS}.fas | Fasta2Phylip.pl - \${FAS}.temp
+        cat <(sed -n '1p' \${FAS}.temp | awk '{l=\$2-3; print \$1,l}') <(sed '1d' \${FAS}.temp | sed 's/...\$//') | sed \$'s/\t/  /' > \${FAS}.phy
+        rm \${FAS}.temp
+      else
+        echo \"\${FAS}.fas looks long, it's \${FASLEN} bp!  Running manual concatenation to haplotypes\"
+        grep -v '>' ${DIRECTORY}/\${FAS}.fas > \${FAS}.temp
+        ITERATOR=0
+        while read CONCAT
+        do
+          ITERATOR=\$((\$ITERATOR+1))
+          echo \"\$CONCAT\" > \${FAS}.temp.\${ITERATOR}
+        done < \${FAS}.temp
+        rm \${FAS}.temp
+        md5sum \${FAS}.temp.* | sort -k1,1 -u | awk '{print \$2}' > \${FAS}.keep
+        SEQNO=\$(cat \${FAS}.keep | wc -l)
+        while read KEEP
+        do
+          paste -d ' ' <(echo \"\${KEEP}\" | rev | cut -d '.' -f 1 | rev) <(cat \$KEEP)
+        done < \${FAS}.keep | sed 's/\(^\|[^ ]\) \($\|[^ ]\)/\1  \2/' > \${FAS}.temp
+        cat <(echo \"\$SEQNO \$FASLEN\") <(sed 's/...\$//' \${FAS}.temp) > \${FAS}.phy
+        rm \${FAS}.temp* \${FAS}.keep
+      fi
     else
       echo -e \"${NEWDR} \${FAS}.fas has zero haplotypes in this population/set.\"
     fi
@@ -110,17 +139,18 @@ do
 done < $DIRECTORY_FILE
 
 ## Await completion of previos jobs
-CONTINUE=$(squeue -u mcmullam | grep -c 'MM-phy-m')
+CONTINUE=$(squeue -u "$USER" | grep -c 'MM-phy-m')
 WAITTIME=1
 TIMEWAIT=0
-echo -e "\nThere are $CONTINUE jobs running (population fasta to phylip convrsions)."
-while [ $CONTINUE -gt "0" ]
+echo -e "\nThere are $CONTINUE jobs running (population fasta to phylip conversions)."
+while [[ "$CONTINUE" -gt "0" ]]
 do
   sleep ${WAITTIME}m
   TIMEWAIT=$(( $TIMEWAIT + $WAITTIME ))
-  CONTINUE=$(squeue -u mcmullam | grep -c 'MM-phy-m')
+  CONTINUE=$(squeue -u "$USER" | grep -c 'MM-phy-m')
   echo -e "${TIMEWAIT} minutes\tThere are $CONTINUE jobs running (population fasta to phylip convrsions)."
 done
+
 
 # Running YN00 through once to check for premature stop codons.
 # These genes won't be run through paml to collect dnds data.
@@ -128,7 +158,7 @@ done
 
 echo -e "\n\nRunning YN00\nFirst to check for premature stop codons which won't be run through paml to collect dnds data. However they will be stored in POPULATION.fas.stops-present.list and removed from ${NEWDR}.fas.stops-removed.list.\nSecond to collect dnds information\n\n"
 
-source paml-4.9
+
 while read DIRECTORY
 do
   HOLDER=$(echo "../${DIRECTORY%_*}" | awk -F '/' '{print $NF}')
@@ -136,41 +166,44 @@ do
   # Make a list of genes which I can remove genes with early stop codons from and a list that contains them.
   cp ${NEWDR}.fas.list ${NEWDR}.fas.stops-removed.list
   > ${NEWDR}.fas.stops-present.list
-  submit-slurm.pl -j yn00-mm_${NEWDR} -i "cd $NEWDR
+  submit-slurm.pl -j yn00-mm_${NEWDR}_02 -i "source paml-4.9
+  cd $NEWDR
   while read GENES
   do 
     sed \"s/MM\.sedreplace\.MM/\${GENES}.phy/\" ../yn00.ctl > yn00-run_${HOLDER}-\${GENES}.ctl
-    echo -e \"$DIRECTORY\n$HOLDER\n$NEWDR\n\${GENES}\"
-    wc -l yn00-run_${HOLDER}-\${GENES}.ctl
-    STOP=\$(yn00 yn00-run_${HOLDER}-\${GENES}.ctl | grep 'stop codon' | wc -l)
-    echo \"\$GENES \$STOP\"
-    if [ \$STOP -eq \"0\" ]
+  done < ../${NEWDR}.fas.list
+  for GENES in *.ctl
+  do
+    GENE=\$(echo \"\${GENES}\" | sed -e \"s/yn00-run_${HOLDER}-//\" -e 's/\.ctl//')
+    STOP=\$(yn00 \$GENES | grep 'stop codon' | wc -l)
+    echo \"\$GENE \$STOP\"
+    if [[ \"\$STOP\" -eq \"0\" ]]
     then
       echo \"no stops\"
-      yn00 yn00-run_${HOLDER}-\${GENES}.ctl
-      BBOYS=\$(wc -l \${GENES}.phy | awk '{n=\$1-1; b=(n*(n-1))/2; l=7+b; print l}')
-      grep -A \$BBOYS \"(B) Yang & Nielsen (2000) method\" \${GENES}.phy.yn > \${GENES}.phy.yn.yn00
+      BBOYS=\$(wc -l \${GENE}.phy | awk '{n=\$1-1; b=(n*(n-1))/2; l=7+b; print l}')
+      grep -A \$BBOYS \"(B) Yang & Nielsen (2000) method\" \${GENE}.phy.yn > \${GENE}.phy.yn.yn00
     else
       echo \"stops\"
-      grep -v \$GENES ../${NEWDR}.fas.stops-removed.list > MM.stops.removed.MM-\${GENEs}-${NEWDR}; mv MM.stops.removed.MM-\${GENEs}-${NEWDR} ../${NEWDR}.fas.stops-removed.list
-      echo \"\${GENES}\" >> ../${NEWDR}.fas.stops-present.list
+      grep -v \$GENE ../${NEWDR}.fas.stops-removed.list > MM.stops.removed.MM-\${GENEs}-${NEWDR}
+      mv MM.stops.removed.MM-\${GENEs}-${NEWDR} ../${NEWDR}.fas.stops-removed.list
+      echo \"\${GENE}\" >> ../${NEWDR}.fas.stops-present.list
     fi
-  done < ../${NEWDR}.fas.list
-  rm *.phy yn00-run_*.ctl rst* rub 2YN*
+  done
+  rm rst rst1 rub 2YN*
   cd ../"
 done < $DIRECTORY_FILE
 
 
 ## Await completion of previos jobs
-CONTINUE=$(squeue -u mcmullam | grep -c 'MM-yn00-')
+CONTINUE=$(squeue -u "$USER" | grep -c 'MM-yn00-')
 WAITTIME=1
 TIMEWAIT=0
 echo -e "\nThere are $CONTINUE jobs running (YN00)."
-while [ $CONTINUE -gt "0" ]
+while [[ "$CONTINUE" -gt "0" ]]
 do
   sleep ${WAITTIME}m
   TIMEWAIT=$(( $TIMEWAIT + $WAITTIME ))
-  CONTINUE=$(squeue -u mcmullam | grep -c 'MM-yn00-')
+  CONTINUE=$(squeue -u "$USER" | grep -c 'MM-yn00-')
   echo -e "${TIMEWAIT} minutes\tThere are $CONTINUE jobs running (YN00)."
 done
 
@@ -183,63 +216,97 @@ while read DIRECTORY
 do
   HOLDER=$(echo "../${DIRECTORY%_*}" | awk -F '/' '{print $NF}')
   NEWDR="${HOLDER}_yn00"
-  submit-slurm.pl -j mean_${NEWDR} -i "cd $NEWDR
+  > ../${NEWDR}.no-diversity.list
+  submit-slurm.pl -j mean_${NEWDR}_03 -i "cd $NEWDR
   while read STOPSREMOVED
   do
     NOLINE8=\$(cat \${STOPSREMOVED}.phy.yn.yn00 | wc -l | awk '{k=\$1-8; print k}')
     echo \"\$STOPSREMOVED\"
-    if [ \"\$NOLINE8\" -eq \"0\" ]
+    if [[ \"\$NOLINE8\" -eq \"0\" ]]
     then
       echo -e \"NA\tNA\tNA\tNA\tNA\tNA\tNA\"
-    elif [ \"$zeros\" -eq \"0\" ]
+      echo \${STOPSREMOVED} >> ../${NEWDR}.no-diversity.list
+    elif [[ \"\$NOLINE8\" -gt \"0\" ]] && [[ \"\$zeros\" -eq \"0\" ]]
+    then
       tail -n \$NOLINE8 \${STOPSREMOVED}.phy.yn.yn00 | awk '\$11>0' > MM.\${STOPSREMOVED}.phy.yn.yn00.ds-gt0.MM
       NOLINEMORE=\$(cat MM.\${STOPSREMOVED}.phy.yn.yn00.ds-gt0.MM | wc -l)
-      if [ \"\$NOLINEMORE\" -eq \"0\" ]
+      if [[ \"\$NOLINEMORE\" -eq \"0\" ]]
       then
         echo -e \"NA\tNA\tNA\tNA\tNA\tNA\tNA\"
       else
         awk -v OFS='\t' '{S+=\$3; N+=\$4; t+=\$5; kappa+=\$6; omega+=\$7; dN+=\$8; dS+=\$11} END {print S/NR, N/NR, t/NR, kappa/NR, omega/NR, dN/NR, dS/NR}' MM.\${STOPSREMOVED}.phy.yn.yn00.ds-gt0.MM
       fi
-    elif [ \"$zeros\" -eq \"1\" ]
+    elif [[ \"\$NOLINE8\" -gt \"0\" ]] && [[ \"\$zeros\" -eq \"1\" ]]
+    then
       tail -n \$NOLINE8 \${STOPSREMOVED}.phy.yn.yn00 > MM.\${STOPSREMOVED}.phy.yn.yn00.ds-eq0.MM
-      NOLINEMORE=\$(cat MM.\${STOPSREMOVED}.phy.yn.yn00.ds-gt0.MM | wc -l)
-      if [ \"\$NOLINEMORE\" -eq \"0\" ]
-      then
-        echo -e \"NA\tNA\tNA\tNA\tNA\tNA\tNA\"
-      else
-        awk -v OFS='\t' '{S+=\$3; N+=\$4; t+=\$5; kappa+=\$6; omega+=\$7; dN+=\$8; dS+=\$11} END {print S/NR, N/NR, t/NR, kappa/NR, omega/NR, dN/NR, dS/NR}' MM.\${STOPSREMOVED}.phy.yn.yn00.ds-eq0.MM
+      awk -v OFS='\t' '{S+=\$3; N+=\$4; t+=\$5; kappa+=\$6; omega+=\$7; dN+=\$8; dS+=\$11} END {print S/NR, N/NR, t/NR, kappa/NR, omega/NR, dN/NR, dS/NR}' MM.\${STOPSREMOVED}.phy.yn.yn00.ds-eq0.MM
     fi
   done < ../${NEWDR}.fas.stops-removed.list | paste - - > MM.temp.yn00.out-${NEWDR}.MM
   # Add headers and clean up
-  if [ \"$zeros\" -eq \"0\" ]
-    cat <(echo -e \"Gene\tS\tN\tt\tkappa\tomega\tdN\tdS\") MM.temp.yn00.out-${NEWDR}.MM > ../${NEWDR}.yn00.mean.txt
+  if [[ \"\$zeros\" -eq \"0\" ]]
+  then
+    cat <(echo -e \"Gene\tS\tN\tt\tkappa\tomega\tdN\tdS\") MM.temp.yn00.out-${NEWDR}.MM > ../${HOLDER}.yn00.mean.txt
   else
-    cat <(echo -e \"Gene\tS\tN\tt\tkappa\tomega\tdN\tdS\") MM.temp.yn00.out-${NEWDR}.MM > ../${NEWDR}.yn00.mean_omega-infinity.txt
+    cat <(echo -e \"Gene\tS\tN\tt\tkappa\tomega\tdN\tdS\") MM.temp.yn00.out-${NEWDR}.MM > ../${HOLDER}.yn00.mean_omega-infinity.txt
   fi
-  rm MM.temp.yn00.out-${NEWDR}.MM
-  cd ../
-  rm -r $NEWDR"
+  rm MM.temp.yn00.out-${NEWDR}.MM MM.*.phy.yn.yn00.ds-??0.MM
+  cd ../"
 done < $DIRECTORY_FILE
 
 ## Await completion of previos jobs
-CONTINUE=$(squeue -u mcmullam | grep -c 'MM-mean')
+CONTINUE=$(squeue -u "$USER" | grep -c 'MM-mean')
 WAITTIME=1
 TIMEWAIT=0
 echo -e "\nThere are $CONTINUE jobs running (table generation and cleanup)."
-while [ $CONTINUE -gt "0" ]
+while [[ "$CONTINUE" -gt "0" ]]
 do
   sleep ${WAITTIME}m
   TIMEWAIT=$(( $TIMEWAIT + $WAITTIME ))
-  CONTINUE=$(squeue -u mcmullam | grep -c 'MM-mean')
+  CONTINUE=$(squeue -u "$USER" | grep -c 'MM-mean')
   echo -e "${TIMEWAIT} minutes\tThere are $CONTINUE jobs running (table generation and cleanup)."
 done
 
+
+if [[ "$kleen" -eq 0 ]]
+then
+  echo -e "\nYou have chosen to remove phylip and YN00 intermediate files and their directories\n"
+  while read DIRECTORY
+  do
+    HOLDER=$(echo "../${DIRECTORY%_*}" | awk -F '/' '{print $NF}')
+    NEWDR="${HOLDER}_yn00"
+    echo "The directory I will remove is $NEWDR"
+    submit-slurm.pl -j remove_${NEWDR}_03 -i "rm -r $NEWDR"
+  done
+else
+  echo -e "\nYou have chosen to preserve phylip and YN00 intermediate files in their directories\n"
+fi
+
+## If we are deleting intermediate files await completion of previos jobs
+
+if [[ "$kleen" -eq 0 ]]
+then
+  CONTINUE=$(squeue -u "$USER" | grep -c 'MM-remo')
+  WAITTIME=1
+  TIMEWAIT=0
+  echo -e "\nThere are $CONTINUE jobs running (removing intermediate files)."
+  while [[ "$CONTINUE" -gt "0" ]]
+  do
+    sleep ${WAITTIME}m
+    TIMEWAIT=$(( $TIMEWAIT + $WAITTIME ))
+    CONTINUE=$(squeue -u "$USER" | grep -c 'MM-remo')
+    echo -e "${TIMEWAIT} minutes\tThere are $CONTINUE jobs running (removing intermediate files)."
+  done
+fi
+
 mkdir paml-yn00-diversity_slurmout
-mv phy-mm*.slurm yn00-mm*.slurm mean_*.slurm *yn00.fas.list *.stops-present.list paml-yn00-diversity_slurmout
-rm *.stops-removed.list
+mv phy-mm*.slurm yn00-mm*.slurm mean_*.slurm *yn00.fas.list *.stops-present.list *.stops-removed.list *.no-diversity.list paml-yn00-diversity_slurmout
+
+if [[ "$kleen" -eq 0 ]]
+then
+  mv remove_*.slurm paml-yn00-diversity_slurmout
+fi
 
 echo -ne "\n\n\tRun complete\n\n"
 
 exit
-
 

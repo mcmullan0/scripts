@@ -5,11 +5,14 @@
 
 RAND=$((1 + RANDOM % 999999))
 
-while getopts "d:" opt
+while getopts "d:n:" opt
 do
   case $opt in
     d)
       MULTIDIR+=("$OPTARG")
+      ;;
+    n)
+      JOBSIZE=$OPTARG
       ;;
     \?)
       echo "Invalid option: -$OPTARG" >&2
@@ -22,13 +25,20 @@ do
   esac
 done
 
+if [ -z ${JOBSIZE+x} ]
+then
+  JOBSIZE=3000
+fi
+
 # If nothing print help
 if [ ${#MULTIDIR[@]} -eq 0 ]
 then
   echo -ne "\n\n########################################################### deldir.sh ############################################################\n"
   echo -ne "# Quickly removes directories containing large numbers of files\n"
-  echo -ne "# Use -d for each directory\n"
-  echo -ne "# Works by dividing files per directory into 10,000 and deleting each set as a seperate job\n"
+  echo -ne "# Use -d for each directory\t(e.g. -d dir_01 -d dir_02 -d etc.)\n"
+  echo -ne "# Works by dividing files per directory into 3,000 by default and deleting each set as a seperate job\n"
+  echo -ne "# Use -n xxx to change the number of files in each delete job\n"
+  echo -ne "#\t Lower numbers run faster over more parallel jobs so balance run time per job over cluster node availibility\n"
   echo -ne "#######################################################################################################################################\n\n"
   exit 1
 fi
@@ -38,7 +48,7 @@ for DIRJOBS in ${MULTIDIR[@]}
 do
   echo "generating $DIRJOBS file list and splitting jobs:"
   ls ${DIRJOBS}/ > MM.del.${DIRJOBS}.${RAND}.list
-  split -a 3 -dl 3000 MM.del.${DIRJOBS}.${RAND}.list MM.del.${DIRJOBS}.${RAND}.list.
+  split -a 3 -dl ${JOBSIZE} MM.del.${DIRJOBS}.${RAND}.list MM.del.${DIRJOBS}.${RAND}.list.
   ls MM.del.${DIRJOBS}.${RAND}.list.*
 done
 
@@ -62,7 +72,7 @@ do
   sleep ${WAITTIME}m
   TIMEWAIT=$(( $TIMEWAIT + $WAITTIME ))
   CONTINUE=$(squeue -u "$USER" | grep -c 'MM-del')
-  echo -e "${TIMEWAIT} minutes\tThere are $CONTINUE jobs running (deleting)."
+  echo -e "${TIMEWAIT} minutes\tThere are $CONTINUE jobs running (each deleting $JOBSIZE files)."
 done
 
 for DIRJOBS in ${MULTIDIR[@]}
