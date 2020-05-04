@@ -67,10 +67,14 @@ my $header;             # Store fasta name / scaffld
 my $output;             # Store window ouput
 my $G = "G";            # Set important bp
 my $C = "C";
+my $T = "T";
+my $A = "A";
 if ($opts{A})
 {
     $G = "A";
     $C = "T";
+    $T = "G";
+    $A = "C";
 }
 my $dash = "-";
 my $unscr = "_";
@@ -99,27 +103,31 @@ foreach my $line (<FASTA>)
         chomp $window;
         my $ucwindow = uc $window;			# Uppercase window
         # Count bases G and C and spaces
+        # now also count T & A and use this to record window total size for cases where the sequence is shorter than the total window size
         my $Gc = () = $ucwindow =~ /$G/g;
         my $Cc = () = $ucwindow =~ /$C/g;
+        my $Tc = () = $ucwindow =~ /$T/g;
+        my $Ac = () = $ucwindow =~ /$A/g;
         my $dashc = () = $ucwindow =~ /$dash/g;
         my $unscrc = () = $ucwindow =~ /$unscr/g;
         my $Nc = () = $ucwindow =~ /$N/g;
         # Sum the groups
         my $GC = $Gc + $Cc;
         my $space = $dashc + $unscrc + $Nc;
+        my $TOTpos = $GC + $Tc + $Ac + $space;
         if ($opts{n})
         {
-            $output = $space/$opts{w};
+            $output = $space/$TOTpos;
         }
         else
         {
-            if ($opts{w} == $space)                 # If all the window is space save program from dividing by zero
+            if ($TOTpos == $space)                 # If all the window is space save program from dividing by zero
             {
-                $output = 0;
+                $output = 'NA';
             }
             else
             {
-                $output = $GC/($opts{w} - $space);
+                $output = $GC/($TOTpos - $space);
             }
         }
         print "$header  $start1 $end1   $output\n";
@@ -134,52 +142,52 @@ foreach my $line (<FASTA>)
             $ucwindow = uc $window;                                 # Change to caps
             $Gc = () = $ucwindow =~ /$G/g;
             $Cc = () = $ucwindow =~ /$C/g;
+            $Tc = () = $ucwindow =~ /$T/g;
+            $Ac = () = $ucwindow =~ /$A/g;
             $dashc = () = $ucwindow =~ /$dash/g;
             $unscrc = () = $ucwindow =~ /$unscr/g;
             $Nc = () = $ucwindow =~ /$N/g;
             $GC = $Gc + $Cc;
             $space = $dashc + $unscrc + $Nc;
+            $TOTpos = $GC + $Tc + $Ac + $space;
             $length = length($ucwindow);
-            if ($length == $opts{w})
+            if ($opts{n})
+            {
+                $output = $space/$TOTpos;
+            }
+            else
+            {
+                if ($TOTpos == $space)                 # If all the window is space save program from dividing by zero
+                {
+                    $output = 'NA';
+                }
+                else
+                {
+                    $output = $GC/($TOTpos - $space);
+                }
+            }
+            print "$header  $start1 $end1   $output\n";
+        }
+        if ($length < $opts{w})
+        {   
+            if ($length > 0)
             {
                 if ($opts{n})
                 {
-                    $output = $space/$opts{w};
+                    $output = $space/$TOTpos;
                 }
                 else
                 {
                     if ($length == $space)                 # If all the window is space save program from dividing by zero
                     {
-                        $output = 0;
+                        $output = 'NA';
                     }
                     else
                     {
-                        $output = $GC/($opts{w} - $space);
+                        $output = $GC/($TOTpos - $space);
                     }
                 }
                 print "$header  $start1 $end1   $output\n";
-            }
-            else
-            {   
-                if ($length > 0)
-                {
-                    if ($opts{n})
-                    {
-                        $output = $space/$length;
-                    }
-                    else
-                    {
-                        if ($length == $space)                 # If all the window is space save program from dividing by zero
-                        {
-                            $output = 0;
-                        }
-                        else
-                        {
-                            $output = $GC/($length - $space);
-                        }
-                    }
-                    print "$header  $start1 $end1   $output\n";
-                }
             }
         }
     }
