@@ -33,7 +33,7 @@ do
   esac
 done
 
-if [ -z ${COLUMN+x} ]
+if [ -z ${COLUMN+x} ] && [ ${HEADER} -eq 0 ]
 then
   echo -ne "\n\n########################################################### mean.sh ############################################################\n"
   echo -ne "#     A script that Provids the sum, count, mean, median, min, max, Standard Devaiaiton and Standard Error of the Mean        #\n"
@@ -46,6 +46,13 @@ then
   echo -ne "# Print a header using -h                                                                                                      #\n"
   echo -ne "################################################################################################################################\n\n"
   exit 1
+elif [ -z ${COLUMN+x} ] && [ ${HEADER} -eq 1 ]
+then
+  echo -e "sum\tCount\tMean\tMedian\tMin\tMax\tStdv\tsem"
+  exit 1
+elif [ ${HEADER} -eq 1 ]
+then
+  echo -e "sum\tCount\tMean\tMedian\tMin\tMax\tStdv\tsem" 
 fi
 
 RAND=$((1 + RANDOM % 999999999))
@@ -55,12 +62,8 @@ RAND=$((1 + RANDOM % 999999999))
 
 # New script downlaoded from https://unix.stackexchange.com/questions/13731/is-there-a-way-to-get-the-min-max-median-and-average-of-a-list-of-numbers-in
 
-if [ "$HEADER" -eq "1" ]
-then
-echo -e "sum\tCount\tMean\tMedian\tMin\tMax\tStdv\tsem"
-fi
-
-tee MM.mean-data.$RAND.MM | awk -v c=$COLUMN '{print $c}' | sort -n | awk '
+cat > MM.mean-data.$RAND.MM
+awk -v c=$COLUMN '{print $c}' MM.mean-data.$RAND.MM | sort -n | awk '
   BEGIN {
     c = 0;
     sum = 0;
