@@ -64,7 +64,7 @@ done
 if [ -z ${INFILE+x} ]
 then
   echo -ne "\n\n########################################################### vcf-ref-ref.sh ############################################################\n"
-  echo -ne "# A script that first counts the number of columns in a vcf (=No. ind) (assumes ind start at $10)                                       #\n"
+  echo -ne "# A script that first counts the number of columns in a vcf (=No. ind) (assumes ind start at column 10)                                       #\n"
   echo -ne "# It then produces a file that lists all positions where all indivdiuals are ref/ref calls (0/0), 0|0 or 0|) = MM.pos-refref_${RAND}.MM #\n"
   echo -ne "# It then runs max-missing to retain only those sites with at least 1 call for an individual (=[1/No. ind] / 2 (if diploid)           #\n"
   echo -ne "# Provide -i infile and state whether it is -h, -d OR -p for haploid, dipolid (unphased 0/1) OR diploid (phased 0|1)                  #\n"
@@ -147,10 +147,22 @@ else
 fi
 
 # Run vcftools
-OUTFILE=$(echo $INFILE | sed 's/.vcf//')
+RECODEVCF=$(echo $INFILE | grep -c "\.recode\.vcf$")
+if [ "$RECODEVCF" -eq "1" ]
+then
+  OUTFILE=$(echo $INFILE | sed 's/.recode.vcf//')
+else
+  OUTFILE=$(echo $INFILE | sed 's/.vcf//')
+fi
+
 source vcftools-0.1.13
-vcftools --vcf $INFILE --exclude-positions MM.pos-refref_${RAND}.MM --recode --out ${OUTFILE}.no-refref 
-vcftools --vcf ${OUTFILE}.no-refref.recode.vcf --max-missing $MAXMIS --recode --out ${OUTFILE}.no-refref.no-missing
- 
-# Clean up
-rm MM.temp-nomis-3_${RAND}.MM MM.pos-replace-sum_${RAND}.MM MM.pos-refref_${RAND}.MM ${OUTFILE}.no-refref.recode.vcf
+if [ "$FIXED" == 1 ]
+then
+  vcftools --vcf $INFILE --exclude-positions MM.pos-refref_${RAND}.MM --recode --out ${OUTFILE}.no-refref.no-altalt
+  vcftools --vcf ${OUTFILE}.no-refref.no-altalt.recode.vcf --max-missing $MAXMIS --recode --out ${OUTFILE}.no-refref.no-altalt.no-missing
+  rm MM.temp-nomis-3_${RAND}.MM MM.pos-replace-sum_${RAND}.MM MM.pos-refref_${RAND}.MM ${OUTFILE}.no-refref.no-altalt.recode.vcf
+else
+  vcftools --vcf $INFILE --exclude-positions MM.pos-refref_${RAND}.MM --recode --out ${OUTFILE}.no-refref 
+  vcftools --vcf ${OUTFILE}.no-refref.recode.vcf --max-missing $MAXMIS --recode --out ${OUTFILE}.no-refref.no-missing
+  rm MM.temp-nomis-3_${RAND}.MM MM.pos-replace-sum_${RAND}.MM MM.pos-refref_${RAND}.MM ${OUTFILE}.no-refref.recode.vcf
+fi
