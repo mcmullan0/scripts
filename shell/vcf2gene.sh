@@ -81,7 +81,7 @@ done
 # print help
 if [ -z ${INFILE+x} ] || [ -z ${INGFF+x} ] || [ -z ${INDLIST+x} ] || [ -z ${VCF+x} ] || [ -z ${VCFPLOID+x} ] || [ ${#MULTIOUT[@]} -eq 0 ]
 then
-  echo -ne "\n\n########################################################### vcf-ref-ref.sh ############################################################\n"
+  echo -ne "\n\n########################################################### vcf2gene.sh ###############################################################\n"
   echo -ne "# Uses a multisample vcf and a reference to generate a reference fasta per individual\n"
   echo -ne "# Individuals references genes are renamed and put in numerical order.  A conversion table is stored as gff.contig_conversion.txt\n"
   echo -ne "# The original gff is not overwritten\n"
@@ -106,7 +106,7 @@ fi
 # Or if you have instructed a regroup run but haven't added any groups then print help
 if [ "$REGROUP" -eq 1 ] && [ ${#MULTIOUT[@]} -eq 0 ]
 then
-  echo -ne "\n\n########################################################### vcf-ref-ref.sh ############################################################\n"
+  echo -ne "\n\n########################################################### vcf2gene.sh ###########################################################\n"
   echo -ne "# -R REGROUP can be used to skip to the end of the run and regroup gene fastas into a new population group (use -o)\n"
   echo -ne "# Regroup is run after this script has been run once to extract genes present in each individual.\n"
   echo -ne "# Once this has been done you can run -R with -o to specify that you want genes from individuals from different groups\n"
