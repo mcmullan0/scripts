@@ -180,7 +180,7 @@ then
   echo -e "\nProduce individual reference fastas"
   for IVCF in *-${PREFIX}.no-refref.no-missing.recode.vcf
   do
-    submit-slurm.pl -j ${RANDSLURM}ref-maker-$IVCF -m 20480 -i "source gatk-3.5.0
+    submit-slurm.pl -j ${RANDSLURM}ref-maker-$IVCF -m 4G -i "source gatk-3.5.0
     source jre-7.11
     java -jar /tgac/software/testing/gatk/3.5.0/x86_64/bin/GenomeAnalysisTK.jar -T FastaAlternateReferenceMaker -R $FAS -V $IVCF -o $IVCF.fasta
     rm $IVCF"
@@ -199,7 +199,7 @@ then
   echo -e "\nConverting multiline fasta to single line fas"
   while read IFAS
   do
-   submit-slurm.pl -j ${RANDSLURM}fas-$IFAS -i "fastline.pl -i ${IFAS}-${PREFIX}.no-refref.no-missing.recode.vcf.fasta -a > ${IFAS}.filt.fas
+   submit-slurm.pl -j ${RANDSLURM}fas-$IFAS -m 4G -i "fastline.pl -i ${IFAS}-${PREFIX}.no-refref.no-missing.recode.vcf.fasta -a > ${IFAS}.filt.fas
     rm ${IFAS}-${PREFIX}.no-refref.no-missing.recode.vcf ${IFAS}-${PREFIX}.no-refref.no-missing.recode.vcf.fasta"
   done < $INDLIST
   echo "Awaiting production of single line fastas"
@@ -212,7 +212,7 @@ then
     COUNTER=$(( $COUNTER + $DURATION ))
     echo -e "... production of single line fastas\n... ... $HOLD jobs remaining ($COUNTER minutes passed)"
   done 
-  
+ 
   echo "To remove wierd characters in contig headers I rename contigs numerically in ind.fastas and .gff"
   echo "I'd do this first (manually grepping) becuase it is difficult to automate.  Though I do try to automate it here"
   echo "Numbering genes from 1..n in both individual reference fastas ind.filt.fas > ind.filt.n.fas"
