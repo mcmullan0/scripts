@@ -341,7 +341,7 @@ do
   mkdir -p $OUTDIR
   for GENESETS in gene.list.${RAND}.*
   do
-    submit-slurm.pl -j ${RANDSLURM}grep-${GENESETS}-${OUTPRFX} -q ei-medium -t 0-05:00 -i "\
+    submit-slurm.pl -j ${RANDSLURM}grep-${GENESETS}-${OUTPRFX} -q ei-short -t 0-00:45 -i "\
     while read ALLGENES
     do
       while read INDFAS
@@ -375,7 +375,7 @@ mv *.slurm slurmout
 # Throw away intermidiat files (or keep)
 if [ -z ${FIXED+x} ]
 then
-  rm *.filt.cds.present.fas *.filt.fas.fai ind-fas.list *.filt.fas *.idx
+  rm *.filt.fas.fai ind-fas.list *.filt.fas *.idx
 else
   mkdir -p vcf2gene-intermediates_run-${RAND}
   rm *.filt.fas.fai *.idx
