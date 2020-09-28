@@ -64,7 +64,8 @@ then
   echo -ne "#\t\tPolyM\n"
   echo -ne "#\t\tNoPolyM\n"
   echo -ne "#\t\tStoPolyM\t-stop present as polymorphism -no YN00 data\n"
-  echo -ne "#\t\tCDSincmp\t-PolyM + incomplete CDS idnetified by VDS not multiple of 3 (not a catch all)\n"
+  echo -ne "#\t\tCDSincmp\t-PolyM + incomplete CDS idnetified by CDS not multiple of 3 (not a catch all)\n"
+  echo -ne "#\t\tINFINITY\t-Division by zero (ds=o dn>0) takes precedence over previous\n"
   echo -ne "# Output is stored in present dir\n"
   echo -ne "#######################################################################################################################################\n\n"
   exit 1
@@ -79,7 +80,7 @@ then
     echo -e "\n\n$PAMLCTL exists"
     echo -e "You may want to use your own yn00.ctl which is already in the directory.\nIf so add the -c option"
     echo -e "However, plese add 'MM.sedreplace.MM' and 'MM.sedreplace.MM' to as seqfile and outfile entries\n"
-    exit
+    exit 1
   else
     echo "producing yn00.ctl file"
     echo -e "      seqfile = MM.sedreplace.MM * sequence data file name\n      outfile = MM.sedreplace.MM.yn           * main result file\n      verbose = 0  * 1: detailed output (list sequences), 0: concise output\n\n        icode = 0  * 0:universal code; 1:mammalian mt; 2-10:see below\n\n    weighting = 0  * weighting pathways between codons (0/1)?\n   commonf3x4 = 0  * use one set of codon freqs for all pairs (0/1)?\n*       ndata = 1\n\n\n* Genetic codes: 0:universal, 1:mammalian mt., 2:yeast mt., 3:mold mt.,\n* 4: invertebrate mt., 5: ciliate nuclear, 6: echinoderm mt.,\n* 7: euplotid mt., 8: alternative yeast nu. 9: ascidian mt.,\n* 10: blepharisma nu.\n* These codes correspond to transl_table 1 to 11 of GENEBANK.\n" > $PAMLCTL
@@ -255,11 +256,19 @@ do
           echo \"Error with incomplete CDS\"
           exit 1
         fi
-        MORTHNZEROS=\$(awk '\$8>0' MM.\${ALLGENE}.phy.yn.yn00.ds-eq0.mean.MM | wc -l)
-        MORTHNZERON=\$(awk '\$7>0' MM.\${ALLGENE}.phy.yn.yn00.ds-eq0.mean.MM | wc -l)
-        if [[ \$\"MORTHNZEROS\" -eq \"0\" ]] && [[ \$\"MORTHNZERON\" -gt \"0\" ]]
+        INFINITYTRIGGER=0
+        while read OUTPUT
+        do
+          MORTHNZEROS=\$(echo \$OUTPUT | awk '\$11>0' | wc -l)
+          MORTHNZERON=\$(echo \$OUTPUT | awk '\$8>0' | wc -l)
+          if [[ \$\"MORTHNZEROS\" -eq \"0\" ]] && [[ \$\"MORTHNZERON\" -gt \"0\" ]]
+          then
+            INFINITYTRIGGER=1
+          fi
+        done < MM.\${ALLGENE}.phy.yn.yn00.ds-eq0.MM
+        if [[ \$\"INFINITYTRIGGER\" -eq \"1\" ]]
         then
-          awk -v OFS='\t' -v I='INFINITY' '{print I,\$2,\$3,\$4,\$5,I\"-\"\$6,\$7,\$8}' MM.\${ALLGENE}.phy.yn.yn00.ds-eq0.mean.MM
+          awk -v OFS='\t' -v I='INFINITY' '{print I,\$2,\$3,\$4,\$5,\$6,\$7,\$8}' MM.\${ALLGENE}.phy.yn.yn00.ds-eq0.mean.MM
         else
           cat MM.\${ALLGENE}.phy.yn.yn00.ds-eq0.mean.MM
         fi
@@ -324,7 +333,7 @@ then
 fi
 
 mkdir paml-yn00-diversity_slurmout
-mv phy-mm*.slurm yn00-mm*.slurm mean_*.slurm *.fas.incomplete.cds.list  *.fas.stops-present.list *.fas.stops-removed.list *.no-diversity.list paml-yn00-diversity_slurmout
+mv phy-mm*.slurm yn00-mm*.slurm mean_*.slurm *.fas.list *.fas.incomplete.cds.list  *.fas.stops-present.list *.fas.stops-removed.list *.no-diversity.list paml-yn00-diversity_slurmout
 
 echo -ne "\n\n\tRun complete\n\n"
 
