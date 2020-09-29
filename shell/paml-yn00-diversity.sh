@@ -99,7 +99,7 @@ do
   NEWDR="${HOLDER}_yn00"
   mkdir -p "$NEWDR"
   > ${NEWDR}/${HOLDER}.fas.incomplete.cds.list
-  submit-slurm.pl -j phy-mm_${NEWDR}_01 -i "source fastx_toolkit-0.0.13.2
+  submit-slurm.pl -j phy-mm_${NEWDR}_01 -q ei-medium -t 0-02:00 -i "source fastx_toolkit-0.0.13.2
   ls ${DIRECTORY}/ | grep '\.fas' | awk -F '/' '{print \$NF}' | sed 's/\.fas//' > ${HOLDER}.fas.list
   cd ${NEWDR}
   while read FAS
@@ -179,7 +179,7 @@ do
   # Make a list of genes which I can remove genes with early stop codons from and a list that contains them.
   cp ${HOLDER}.fas.list ${NEWDR}/${HOLDER}.fas.stops-removed.list
   > ${NEWDR}/${HOLDER}.fas.stops-present.list
-  submit-slurm.pl -j yn00-mm_${NEWDR}_02 -i "source paml-4.9
+  submit-slurm.pl -j yn00-mm_${NEWDR}_02 -q ei-medium -t 0-02:00 -i "source paml-4.9
   cd $NEWDR
   while read GENES
   do 
@@ -227,7 +227,7 @@ do
   HOLDER=$(echo "../${DIRECTORY%_*}" | awk -F '/' '{print $NF}')
   NEWDR="${HOLDER}_yn00"
   > ${NEWDR}/${HOLDER}.no-diversity.list
-  submit-slurm.pl -j mean_${NEWDR}_03 -i "cd $NEWDR
+  submit-slurm.pl -j mean_${NEWDR}_03 -q ei-medium -t 0-02:00 -i "cd $NEWDR
   while read ALLGENE
   do
     echo \"\$ALLGENE\"
