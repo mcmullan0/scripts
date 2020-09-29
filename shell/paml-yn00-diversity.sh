@@ -221,7 +221,7 @@ echo -e "\nGenerating a table of mean dnds for each gene (ds>=0)\n"
 # Collect data (mean dnds) from the YN00 output
 # If there was no output print NA
 # If after removal of all of the ds=0 values (causing dnds=99) there are no lines print NA
-exit 0
+
 while read DIRECTORY
 do
   HOLDER=$(echo "../${DIRECTORY%_*}" | awk -F '/' '{print $NF}')
