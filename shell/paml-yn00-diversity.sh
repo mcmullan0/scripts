@@ -221,7 +221,7 @@ echo -e "\nGenerating a table of mean dnds for each gene (ds>=0)\n"
 # Collect data (mean dnds) from the YN00 output
 # If there was no output print NA
 # If after removal of all of the ds=0 values (causing dnds=99) there are no lines print NA
-
+exit 0
 while read DIRECTORY
 do
   HOLDER=$(echo "../${DIRECTORY%_*}" | awk -F '/' '{print $NF}')
@@ -261,7 +261,8 @@ do
         do
           MORTHNZEROS=\$(echo \$OUTPUT | awk '\$11>0' | wc -l)
           MORTHNZERON=\$(echo \$OUTPUT | awk '\$8>0' | wc -l)
-          if [[ \$\"MORTHNZEROS\" -eq \"0\" ]] && [[ \$\"MORTHNZERON\" -gt \"0\" ]]
+          MORTHNZERODNDS=\$(echo \$OUTPUT | awk '\$6>0' | wc -l)
+          if [[ \$\"MORTHNZEROS\" -eq \"0\" ]] && [[ \$\"MORTHNZERON\" -ge \"0\" ]] && [[ \$\"MORTHNZERODNDS\" -gt \"0\" ]]
           then
             INFINITYTRIGGER=1
           fi
